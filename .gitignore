@@ -1,0 +1,7 @@
+# Caché de Python
+__pycache__/
+*.pyc
+
+# Archivos del sistema
+Thumbs.db
+desktop.ini

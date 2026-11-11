@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# Archivo TOC ("Table of Contents") del addon.
+#
+# WoW busca en Interface\AddOns\<Carpeta>\<Carpeta>.toc: el nombre del archivo
+# tiene que coincidir con el de la carpeta o el addon no aparece en la lista.
+#
+# Las líneas "## Clave: valor" son metadatos que lee el cliente.
+# Las líneas que empiezan por un solo "#" son comentarios y se ignoran.
+# El resto de líneas son los archivos de código, que se cargan en este orden.
+# ---------------------------------------------------------------------------
+
+# Versión de la interfaz para la que está hecho el addon. Si no coincide con la
+# del cliente, WoW lo marca como "desactualizado". El valor real se consulta en
+# el juego con: /dump select(4, GetBuildInfo())
+## Interface: 16001
+
+## Title: FranTools
+# La descripción va en una sola línea; "|n" es el salto de línea en los textos de WoW.
+## Notes: Avisos del cazador (mascota, munición, aspecto), reparar y vender la basura, y el agro en las barras de nombre.|n/fran
+## Author: fsegado
+# Versión del addon. Es la única fuente: el código la lee de aquí (Api.AddOnVersion).
+# 0.x mientras sea una versión de pruebas.
+## Version: 0.1.0
+# Icono de la lista de addons: el mismo del botón del minimapa (Const.ICON).
+## IconTexture: Interface\Icons\INV_Misc_Wrench_01
+
+# Variable global que WoW guarda en disco por personaje en
+# WTF\Account\<cuenta>\<reino>\<personaje>\SavedVariables\FranTools.lua
+# Se escribe al hacer /reload, al cerrar sesión o al salir del juego.
+## SavedVariablesPerCharacter: FranToolsChar
+
+# Orden de carga: cada módulo usa los que se han cargado antes que él.
+#   Constantes y utilidades genéricas (Util y Api, compartidas con StreamDeckWoW)
+Core\Constants.lua
+Core\Util.lua
+Core\Api.lua
+#   Datos guardados, y las opciones que había en StreamDeckWoW
+Core\Storage.lua
+Core\Migration.lua
+#   Componentes de interfaz que usan también las funciones
+UI\Tooltip.lua
+UI\NoticeBox.lua
+UI\ThreatBadge.lua
+#   Funciones
+Features\PetTaunt.lua
+Features\Ammo.lua
+Features\Aspect.lua
+Features\Merchant.lua
+Features\Threat.lua
+#   Ventana de opciones: componentes, páginas y la ventana
+UI\Checkbox.lua
+UI\NumberBox.lua
+UI\OptionsPage.lua
+UI\Sidebar.lua
+UI\GeneralPage.lua
+UI\ClassPages\ClassPages.lua
+UI\ClassPages\Hunter.lua
+UI\ConfigWindow.lua
+#   Botón del minimapa (componente compartido y el de este addon)
+UI\MinimapButton.lua
+UI\Minimap.lua
+#   Comandos de chat (usa todo lo anterior)
+Core\Commands.lua

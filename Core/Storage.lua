@@ -9,6 +9,8 @@ PLAYER_LOGIN y la escribe al hacer /reload, al cerrar sesión o al salir.
 Cada parte del addon tiene su tabla de preferencias, y en ella solo se guarda
 lo que el jugador ha cambiado:
 
+  sidebar    barra lateral de la ventana de opciones:
+               <grupo>  true si el jugador lo ha plegado ({ Cazador = true })
   minimap    botón del minimapa:
                angle    posición alrededor del minimapa, en grados
                         (nil -> la de por defecto)
@@ -34,6 +36,17 @@ lo que el jugador ha cambiado:
                off      true si lo ha apagado
   threat     agro en las barras de nombre de los enemigos:
                off      true si lo ha apagado
+  battleShout, demonArmor, aura, blessing
+             avisos de beneficio (Features/BuffWarning.lua) del guerrero,
+             el brujo y el paladín: off, point y anytime como en aspect; el
+             aura también chosen
+  shards, healthstone
+             avisos por cantidad (Features/CountWarning.lua) del brujo: off,
+             point y, los fragmentos, thresholds = { count = { low, critical } }
+  righteousFury
+             aviso de Furia justa del paladín: off, point y
+               tank     true si el jugador ha dicho que tanquea (cuando el
+                        juego no sabe su rol)
 ]]
 
 local _, ns = ...
@@ -56,6 +69,12 @@ local function section(key)
     return d[key]
 end
 
+-- Tabla de preferencias de cualquier parte, por su nombre: la usan los avisos
+-- que se crean a partir de una descripción (Features/BuffWarning.lua...).
+function Storage.Get(key)
+    return section(key)
+end
+
 -- Si ya hay preferencias de una parte (para no pisarlas al traer las de otro
 -- addon, ver Core/Migration.lua).
 function Storage.HasSection(key)
@@ -65,6 +84,10 @@ end
 -- Guarda una tabla de preferencias entera.
 function Storage.SetSection(key, value)
     db()[key] = value
+end
+
+function Storage.GetSidebar()
+    return section("sidebar")
 end
 
 function Storage.GetMinimap()

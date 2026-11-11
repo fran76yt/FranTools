@@ -18,7 +18,11 @@ Tipos de fila:
   { kind = "numbers", label, tooltip, fields = { { get, set, tooltip }, ... } }
         texto a la izquierda y una caja numérica (UI/NumberBox.lua) por columna
   { kind = "note", text }
-        texto de ayuda en gris, a lo ancho
+        texto de ayuda en gris, a lo ancho; ocupa las líneas que necesite y
+        lo que va debajo baja con él
+
+Las filas van una debajo de otra. Cada una ocupa ROW_HEIGHT salvo las notas,
+que miden lo que su texto, y los títulos llevan un poco de aire encima.
 
   local update = ns.OptionsPage.Build(page, rows)
   update()   -- vuelve a leer todos los valores
@@ -33,10 +37,6 @@ ns.OptionsPage = OptionsPage
 --------------------------------------------------------------------------------
 -- Piezas comunes
 --------------------------------------------------------------------------------
-
-local function rowY(index)
-    return UI.PAGE_TOP - (index - 1) * UI.ROW_HEIGHT
-end
 
 -- Texto a la izquierda de la fila, centrado en su alto.
 local function leftLabel(page, y, text, font)
@@ -54,8 +54,12 @@ end
 --------------------------------------------------------------------------------
 -- Constructores por tipo de fila
 --------------------------------------------------------------------------------
--- Cada uno dibuja la fila a la altura y y devuelve los controles que hay que
--- actualizar (los que tienen :Update()), o nada.
+-- Cada uno dibuja la fila con su parte de arriba en y y devuelve los controles
+-- que hay que actualizar (los que tienen :Update()), o nada, y el alto que
+-- ocupa si no es ROW_HEIGHT.
+
+-- Espacio extra encima de algunos tipos de fila (cuando no son la primera).
+local GAP_BEFORE = { header = UI.SECTION_GAP }
 
 local builders = {}
 
@@ -101,14 +105,17 @@ function builders.numbers(page, row, y)
     return controls
 end
 
+-- El ancho se fija con SetWidth y no con anclas a los dos lados: así el juego
+-- sabe ya dónde parte las líneas y GetStringHeight da el alto del texto
+-- aunque la ventana aún no se haya mostrado.
 function builders.note(page, row, y)
     local note = page:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    -- Dos anclas a la misma altura (izquierda y derecha) fijan el ancho; el
-    -- alto lo da el propio texto según las líneas que ocupe.
-    note:SetPoint("TOPLEFT", page, "TOPLEFT", UI.PADDING, y - UI.ROW_HEIGHT / 4)
-    note:SetPoint("TOPRIGHT", page, "TOPRIGHT", -UI.PADDING, y - UI.ROW_HEIGHT / 4)
+    note:SetPoint("TOPLEFT", page, "TOPLEFT", UI.PADDING, y - UI.NOTE_MARGIN)
+    note:SetWidth(UI.CONTENT_WIDTH - 2 * UI.PADDING)
     note:SetJustifyH("LEFT")
     note:SetText(row.text)
+    local textHeight = note:GetStringHeight() or 0
+    return nil, math.max(UI.ROW_HEIGHT, textHeight + 2 * UI.NOTE_MARGIN)
 end
 
 --------------------------------------------------------------------------------
@@ -116,11 +123,12 @@ end
 --------------------------------------------------------------------------------
 
 function OptionsPage.Build(page, rows)
-    local controls = {}
+    local controls, y = {}, UI.PAGE_TOP
     for i, row in ipairs(rows) do
-        for _, c in ipairs(builders[row.kind](page, row, rowY(i)) or {}) do
-            controls[#controls + 1] = c
-        end
+        if i > 1 then y = y - (GAP_BEFORE[row.kind] or 0) end
+        local made, height = builders[row.kind](page, row, y)
+        for _, c in ipairs(made or {}) do controls[#controls + 1] = c end
+        y = y - (height or UI.ROW_HEIGHT)
     end
     return function()
         for _, c in ipairs(controls) do c:Update() end

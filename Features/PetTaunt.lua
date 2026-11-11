@@ -3,7 +3,8 @@ Aviso del taunt de la mascota
 =============================
 
 Avisa cuando el lanzamiento automático del taunt de la mascota (Bramido en el
-cazador) no es el adecuado para donde estás:
+cazador, Tormento en el abisario del brujo) no es el adecuado para donde
+estás:
 
   en mazmorra o banda, ACTIVADO     -> la mascota le quita los enemigos al tanque
   fuera de ellas, DESACTIVADO       -> la mascota no los aguanta y vienen a por ti
@@ -35,12 +36,22 @@ local warned = false
 --------------------------------------------------------------------------------
 
 local tauntIDs = {}
-for _, id in ipairs(C.SPELLS) do tauntIDs[id] = true end
+for _, ranks in ipairs(C.TAUNTS) do
+    for _, id in ipairs(ranks) do tauntIDs[id] = true end
+end
 
--- Todos los rangos se llaman igual, así que basta el nombre del primero para
--- reconocerlo en clientes que no dan el ID en la barra de la mascota.
+-- Todos los rangos se llaman igual, así que basta el nombre del primero de
+-- cada taunt para reconocerlo en clientes que no dan el ID en la barra de la
+-- mascota.
+local function isTauntName(name)
+    for _, ranks in ipairs(C.TAUNTS) do
+        if name == Api.SpellName(ranks[1]) then return true end
+    end
+    return false
+end
+
 local function isTaunt(action)
-    return tauntIDs[action.spellID] or action.name == Api.SpellName(C.SPELLS[1])
+    return tauntIDs[action.spellID] or isTauntName(action.name)
 end
 
 local function identity(v) return v end

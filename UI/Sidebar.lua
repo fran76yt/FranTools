@@ -7,11 +7,16 @@ las listas de categorías de las opciones del juego. Las entradas seguidas con
 el mismo "group" se agrupan bajo un título con ese nombre (y su color, si lo
 trae), con sangría. La entrada elegida se marca con fondo y raya dorados.
 
+Los grupos se pliegan y despliegan con un clic en su título (con un más o un
+menos a la derecha, como las listas plegables del juego). Si se le pasa una
+tabla "collapsed", los grupos plegados se apuntan en ella (collapsed[grupo] =
+true) y la barra los respeta al crearse: quien la usa decide si se guardan.
+
   local nav = ns.Sidebar.Create(window, {
       { title = "General" },
       { title = "Mascota", group = "Cazador", groupColor = { r, g, b } },
       { title = "Munición", group = "Cazador", groupColor = { r, g, b } },
-  }, function(i) ... end)   -- se llama al elegir la entrada i
+  }, function(i) ... end, collapsed)   -- se llama al elegir la entrada i
   nav:Select(1)
 
 Todo se dibuja con texturas de color liso, sin plantillas de Blizzard, que
@@ -44,31 +49,39 @@ local function createBackground(bar)
     line:SetPoint("BOTTOMRIGHT")
 end
 
--- Título de un grupo. Devuelve la altura (y) por la que sigue la lista.
-local function createHeader(bar, entry, y)
-    y = y - NAV.HEADER_GAP
-    local header = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    header:SetPoint("LEFT", bar, "TOPLEFT", NAV.TEXT_LEFT, y - NAV.ENTRY_HEIGHT / 2)
-    header:SetText(entry.group)
-    if entry.groupColor then header:SetTextColor(unpack(entry.groupColor)) end
-    return y - NAV.ENTRY_HEIGHT - NAV.ENTRY_GAP
-end
-
--- Con nombre global si la ventana lo tiene (<Ventana>Nav1, Nav2...): así lo
--- encuentran otros addons y las pruebas.
-local function entryName(bar, index)
+-- Con nombre global si la ventana lo tiene (<Ventana>Nav1, <Ventana>Group1...):
+-- así lo encuentran otros addons y las pruebas.
+local function childName(bar, kind, index)
     local parentName = bar:GetParent():GetName()
-    return parentName and (parentName .. "Nav" .. index) or nil
+    return parentName and (parentName .. kind .. index) or nil
 end
 
--- Entrada pulsable: fondo al pasar el ratón (capa HIGHLIGHT, que el juego
--- muestra sola) y fondo y raya que se encienden al elegirla.
-local function createEntry(bar, entry, index, y)
-    local b = CreateFrame("Button", entryName(bar, index), bar)
+-- Fila pulsable de la barra, con fondo al pasar el ratón (capa HIGHLIGHT, que
+-- el juego muestra sola). Su posición la pone Layout.
+local function createRow(bar, name)
+    local b = CreateFrame("Button", name, bar)
     b:SetHeight(NAV.ENTRY_HEIGHT)
-    b:SetPoint("TOPLEFT", 0, y)
-    b:SetPoint("TOPRIGHT", -NAV.DIVIDER_WIDTH, y)
     colorTexture(b, "HIGHLIGHT", NAV.HOVER_COLOR):SetAllPoints()
+    return b
+end
+
+-- Título de un grupo: su nombre (en su color) y el más o el menos de plegar.
+local function createHeader(bar, entry, index)
+    local h = createRow(bar, childName(bar, "Group", index))
+    h.label = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    h.label:SetPoint("LEFT", NAV.TEXT_LEFT, 0)
+    h.label:SetText(entry.group)
+    if entry.groupColor then h.label:SetTextColor(unpack(entry.groupColor)) end
+    h.toggle = h:CreateTexture(nil, "ARTWORK")
+    h.toggle:SetSize(NAV.TOGGLE_SIZE, NAV.TOGGLE_SIZE)
+    h.toggle:SetPoint("RIGHT", NAV.TOGGLE_RIGHT, 0)
+    h:SetScript("OnClick", function() bar:ToggleGroup(entry.group) end)
+    return h
+end
+
+-- Entrada de una página: fondo y raya que se encienden al elegirla.
+local function createEntry(bar, entry, index)
+    local b = createRow(bar, childName(bar, "Nav", index))
     b.selection = colorTexture(b, "BACKGROUND", NAV.SELECTED_COLOR)
     b.selection:SetAllPoints()
     b.accent = colorTexture(b, "ARTWORK", NAV.ACCENT_COLOR)
@@ -88,6 +101,22 @@ local function setSelected(b, on)
     b.label:SetTextColor(unpack(on and NAV.SELECTED_TEXT_COLOR or NAV.TEXT_COLOR))
 end
 
+-- Filas de la barra en orden: el título de cada grupo justo antes de su
+-- primera entrada. { frame, group, isHeader }.
+local function createRows(bar, entries)
+    local rows, group, headers = {}, nil, 0
+    for i, entry in ipairs(entries) do
+        if entry.group and entry.group ~= group then
+            headers = headers + 1
+            rows[#rows + 1] = { frame = createHeader(bar, entry, headers), group = entry.group, isHeader = true }
+        end
+        group = entry.group
+        bar.entries[i] = createEntry(bar, entry, i)
+        rows[#rows + 1] = { frame = bar.entries[i], group = entry.group }
+    end
+    return rows
+end
+
 --------------------------------------------------------------------------------
 -- API del componente
 --------------------------------------------------------------------------------
@@ -100,26 +129,51 @@ function methods:Select(index)
     self.onSelect(index)
 end
 
+function methods:IsCollapsed(group)
+    return self.collapsed[group] == true
+end
+
+-- Coloca las filas de arriba abajo, saltándose las de los grupos plegados.
+function methods:Layout()
+    local y = -NAV.FIRST_GAP
+    for _, row in ipairs(self.rows) do
+        local visible = row.isHeader or not (row.group and self:IsCollapsed(row.group))
+        row.frame:SetShown(visible)
+        if row.isHeader then
+            row.frame.toggle:SetTexture(self:IsCollapsed(row.group) and NAV.COLLAPSED_TEXTURE or NAV.EXPANDED_TEXTURE)
+        end
+        if visible then
+            if row.isHeader then y = y - NAV.HEADER_GAP end
+            row.frame:ClearAllPoints()
+            row.frame:SetPoint("TOPLEFT", 0, y)
+            row.frame:SetPoint("TOPRIGHT", -NAV.DIVIDER_WIDTH, y)
+            y = y - NAV.ENTRY_HEIGHT - NAV.ENTRY_GAP
+        end
+    end
+end
+
+-- Pliega o despliega un grupo. La página elegida sigue a la vista aunque su
+-- entrada quede oculta. Se guarda nil en vez de false para que solo quede
+-- apuntado lo que está plegado.
+function methods:ToggleGroup(group)
+    self.collapsed[group] = not self:IsCollapsed(group) or nil
+    self:Layout()
+end
+
 -- Ancho total que ocupa la barra desde el borde de la ventana.
 function Sidebar.Width()
     return NAV.LEFT + NAV.WIDTH
 end
 
-function Sidebar.Create(parent, entries, onSelect)
+function Sidebar.Create(parent, entries, onSelect, collapsed)
     local bar = CreateFrame("Frame", nil, parent)
     bar:SetWidth(NAV.WIDTH)
     bar:SetPoint("TOPLEFT", NAV.LEFT, NAV.TOP)
     bar:SetPoint("BOTTOMLEFT", NAV.LEFT, NAV.BOTTOM)
     for name, fn in pairs(methods) do bar[name] = fn end
-    bar.entries, bar.onSelect = {}, onSelect
+    bar.entries, bar.onSelect, bar.collapsed = {}, onSelect, collapsed or {}
     createBackground(bar)
-
-    local y, group = -NAV.FIRST_GAP, nil
-    for i, entry in ipairs(entries) do
-        if entry.group and entry.group ~= group then y = createHeader(bar, entry, y) end
-        group = entry.group
-        bar.entries[i] = createEntry(bar, entry, i, y)
-        y = y - NAV.ENTRY_HEIGHT - NAV.ENTRY_GAP
-    end
+    bar.rows = createRows(bar, entries)
+    bar:Layout()
     return bar
 end

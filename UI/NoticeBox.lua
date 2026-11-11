@@ -8,7 +8,9 @@ una línea de texto, con el borde del color del nivel del aviso ("warning"
 ahí mientras dure el problema y desaparece solo.
 
 El jugador lo puede arrastrar a donde le moleste menos; la posición se guarda
-en la tabla de preferencias que pasa quien lo crea.
+en la tabla de preferencias que pasa quien lo crea. Los que no ha movido se
+apilan por debajo del centro de la pantalla, en el orden en que se crearon y
+solo los que están a la vista, para que varios avisos a la vez no se tapen.
 
   local box = ns.NoticeBox.Create({
       name = "NombreGlobal",                 -- opcional
@@ -32,17 +34,33 @@ local N = Const.NOTICE
 local NoticeBox = {}
 ns.NoticeBox = NoticeBox
 
+local boxes = {}   -- todos los recuadros, en el orden en que se crearon
+
 --------------------------------------------------------------------------------
 -- Posición
 --------------------------------------------------------------------------------
 
+-- Posición de un recuadro movido por el jugador. Los demás los coloca restack.
 local function restorePoint(f, settings)
     local p = settings.point
+    if not p then return end
     f:ClearAllPoints()
-    if p then
-        f:SetPoint(p[1], UIParent, p[2], p[3], p[4])
-    else
-        f:SetPoint(N.DEFAULT_POINT[1], UIParent, N.DEFAULT_POINT[1], N.DEFAULT_POINT[2], N.DEFAULT_POINT[3])
+    f:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+end
+
+-- Coloca uno debajo de otro, desde DEFAULT_POINT, los recuadros visibles que
+-- el jugador no ha movido. Se llama cada vez que uno aparece, desaparece o se
+-- suelta tras moverlo, para que no queden huecos.
+local function restack()
+    local slot = 0
+    for _, box in ipairs(boxes) do
+        local f = box.frame
+        if f and f:IsShown() and not box.opts.settings().point then
+            local x, y = N.DEFAULT_POINT[2], N.DEFAULT_POINT[3] - slot * (N.HEIGHT + N.STACK_GAP)
+            f:ClearAllPoints()
+            f:SetPoint(N.DEFAULT_POINT[1], UIParent, N.DEFAULT_POINT[1], x, y)
+            slot = slot + 1
+        end
     end
 end
 
@@ -80,6 +98,7 @@ local function makeMovable(f, opts)
     f:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         savePoint(self, opts.settings())
+        restack()
     end)
 end
 
@@ -123,6 +142,7 @@ function methods:ShowNotice(icon, text, level)
     if f.SetBackdropBorderColor then f:SetBackdropBorderColor(unpack(color)) end
     f.text:SetTextColor(unpack(color))
     f:Show()
+    restack()
 end
 
 -- Muestra el aviso si hay texto y, si no, lo oculta: así quien lo usa no
@@ -136,7 +156,10 @@ function methods:ShowIf(icon, text, level)
 end
 
 function methods:Hide()
-    if self.frame then self.frame:Hide() end
+    if self.frame and self.frame:IsShown() then
+        self.frame:Hide()
+        restack()
+    end
 end
 
 function methods:IsShown()
@@ -146,5 +169,6 @@ end
 function NoticeBox.Create(opts)
     local box = { opts = opts }
     for name, fn in pairs(methods) do box[name] = fn end
+    boxes[#boxes + 1] = box
     return box
 end

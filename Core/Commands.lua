@@ -11,6 +11,13 @@ Comandos de chat
   /fran reparar    apagar o encender reparar al abrir un vendedor
   /fran basura     apagar o encender vender la basura al abrir un vendedor
   /fran agro       apagar o encender el agro en las barras de nombre
+  /fran grito      apagar o encender el aviso de Grito de guerra (guerrero)
+  /fran fragmentos apagar o encender el aviso de fragmentos de alma (brujo)
+  /fran piedra     apagar o encender el aviso de piedra de salud (brujo)
+  /fran armadura   apagar o encender el aviso de armadura (brujo)
+  /fran aura       apagar o encender el aviso de aura (paladín)
+  /fran bendicion  apagar o encender el aviso de bendición (paladín)
+  /fran furia      apagar o encender el aviso de Furia justa (paladín)
   /fran ayuda      versión y lista de comandos (también con cualquier otro texto)
 
 Cada subcomando es una función en la tabla "commands": añadir uno nuevo es
@@ -43,6 +50,20 @@ local TOGGLES = {
       "apagar o encender vender la basura al abrir un vendedor" },
     { "agro", function() return ns.Threat.Toggle() end, "agro en las barras de nombre",
       "apagar o encender el agro en las barras de nombre" },
+    { "grito", function() return ns.BattleShout.Toggle() end, "aviso de Grito de guerra",
+      "apagar o encender el aviso de Grito de guerra (guerrero)" },
+    { "fragmentos", function() return ns.Shards.Toggle() end, "aviso de fragmentos de alma",
+      "apagar o encender el aviso de fragmentos de alma (brujo)" },
+    { "piedra", function() return ns.Healthstone.Toggle() end, "aviso de piedra de salud",
+      "apagar o encender el aviso de piedra de salud (brujo)" },
+    { "armadura", function() return ns.DemonArmor.Toggle() end, "aviso de armadura",
+      "apagar o encender el aviso de armadura (brujo)" },
+    { "aura", function() return ns.Aura.Toggle() end, "aviso de aura",
+      "apagar o encender el aviso de aura (paladín)" },
+    { "bendicion", function() return ns.Blessing.Toggle() end, "aviso de bendición",
+      "apagar o encender el aviso de bendición (paladín)" },
+    { "furia", function() return ns.RighteousFury.Toggle() end, "aviso de Furia justa",
+      "apagar o encender el aviso de Furia justa (paladín)" },
 }
 
 local function toggleCommand(name, toggle, what)

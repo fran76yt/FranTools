@@ -34,48 +34,22 @@ ns.Ammo = Ammo
 --------------------------------------------------------------------------------
 -- Umbrales
 --------------------------------------------------------------------------------
--- Se guardan por el nombre del tipo ("arrow", "bullet") y solo si difieren del
--- valor por defecto, para que cambiar el valor por defecto en una versión
--- nueva llegue a quien no lo ha tocado.
+-- Por tipo de munición, con el nombre del tipo ("arrow", "bullet") como grupo
+-- (ver Core/Thresholds.lua).
 
--- Umbral guardado, o nil. Solo lee: consultar no debe dejar tablas vacías
--- en el archivo de quien nunca ha tocado los umbrales.
-local function savedThreshold(ammoType, which)
-    local all = Storage.GetAmmo().thresholds
-    local own = all and all[C.TYPES[ammoType].key]
-    return own and own[which]
-end
+local thresholds = ns.Thresholds.Create({
+    settings = Storage.GetAmmo,
+    defaults = function(key) return C.TYPE_BY_KEY[key] end,
+    onChange = function() Ammo.Check() end,
+})
 
 -- which = "low" (aviso) o "critical" (rojo).
 function Ammo.GetThreshold(ammoType, which)
-    return savedThreshold(ammoType, which) or C.TYPES[ammoType][which]
+    return thresholds:Get(C.TYPES[ammoType].key, which)
 end
 
--- Guarda un umbral; las tablas se crean solo aquí, al escribir.
-local function store(ammoType, which, value)
-    local settings = Storage.GetAmmo()
-    local key = C.TYPES[ammoType].key
-    settings.thresholds = settings.thresholds or {}
-    settings.thresholds[key] = settings.thresholds[key] or {}
-    Util.SetOverride(settings.thresholds[key], which, value, C.TYPES[ammoType][which])
-end
-
-local function clamp(value)
-    return math.max(0, math.min(C.MAX_THRESHOLD, math.floor(value)))
-end
-
--- El crítico nunca puede quedar por encima del aviso: si se pide, se ajusta.
--- Al bajar el aviso por debajo del crítico, el crítico baja con él.
 function Ammo.SetThreshold(ammoType, which, value)
-    value = clamp(value)
-    if which == "critical" then
-        value = math.min(value, Ammo.GetThreshold(ammoType, "low"))
-    elseif Ammo.GetThreshold(ammoType, "critical") > value then
-        store(ammoType, "critical", value)
-    end
-    store(ammoType, which, value)
-    Ammo.Check()
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+    thresholds:Set(C.TYPES[ammoType].key, which, value)
 end
 
 --------------------------------------------------------------------------------
@@ -127,14 +101,12 @@ end
 -- Aviso
 --------------------------------------------------------------------------------
 
+local TEXTS = { none = "Sin munición", critical = "Munición muy baja: %d", low = "Munición baja: %d" }
+
 -- Nivel del aviso y texto para esa cantidad, o nil si hay de sobra.
 local function noticeFor(count, ammoType)
-    if count >= Ammo.GetThreshold(ammoType, "low") then return nil end
-    if count == 0 then return "critical", "Sin munición" end
-    if count < Ammo.GetThreshold(ammoType, "critical") then
-        return "critical", ("Munición muy baja: %d"):format(count)
-    end
-    return "warning", ("Munición baja: %d"):format(count)
+    return ns.Thresholds.Notice(count, Ammo.GetThreshold(ammoType, "low"),
+        Ammo.GetThreshold(ammoType, "critical"), TEXTS)
 end
 
 -- El marco del recuadro se crea al mostrar el primer aviso.

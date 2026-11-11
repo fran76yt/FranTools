@@ -10,9 +10,12 @@
 
 ---
 
-Addon de **World of Warcraft: Forever** con pequeñas ayudas para el día a día, sobre todo para el cazador:
+Addon de **World of Warcraft: Forever** con pequeñas ayudas para el día a día:
 
 - **Avisos del cazador:** el taunt de la mascota mal puesto, la munición que se acaba y pelear sin el aspecto que toca.
+- **Avisos del guerrero:** Grito de guerra caído.
+- **Avisos del brujo:** pocos fragmentos de alma, sin piedra de salud, sin armadura y el taunt del abisario mal puesto.
+- **Avisos del paladín:** sin aura, sin bendición y Furia justa cuando no toca.
 - **Vendedor:** al abrirlo, vende la basura y repara el equipo.
 - **Agro en las barras de nombre:** quién tiene a cada enemigo (tú, tu mascota u otro) y tu amenaza.
 
@@ -58,12 +61,19 @@ El nombre de la carpeta tiene que coincidir con el del `.toc`. En la pantalla de
 |---|---|
 | `/fran` o `/fran config` | Abre o cierra la ventana de opciones (también con clic en el botón del minimapa). `/frantools` vale igual que `/fran` |
 | `/fran minimapa` | Oculta el botón del minimapa o lo vuelve a mostrar; se recuerda por personaje |
-| `/fran aviso` | Apaga o enciende el aviso del taunt de la mascota |
+| `/fran aviso` | Apaga o enciende el aviso del taunt de la mascota (cazador y brujo) |
 | `/fran municion` | Apaga o enciende el aviso de munición baja |
 | `/fran aspecto` | Apaga o enciende el aviso de aspecto |
 | `/fran reparar` | Apaga o enciende reparar al abrir un vendedor |
 | `/fran basura` | Apaga o enciende vender la basura al abrir un vendedor |
 | `/fran agro` | Apaga o enciende el agro en las barras de nombre |
+| `/fran grito` | Guerrero: apaga o enciende el aviso de Grito de guerra |
+| `/fran fragmentos` | Brujo: apaga o enciende el aviso de fragmentos de alma |
+| `/fran piedra` | Brujo: apaga o enciende el aviso de piedra de salud |
+| `/fran armadura` | Brujo: apaga o enciende el aviso de armadura |
+| `/fran aura` | Paladín: apaga o enciende el aviso de aura |
+| `/fran bendicion` | Paladín: apaga o enciende el aviso de bendición |
+| `/fran furia` | Paladín: apaga o enciende el aviso de Furia justa |
 | `/fran ayuda` | Versión del addon y lista de comandos (también sale con cualquier otro texto) |
 
 Todo lo que se apaga o enciende se recuerda por personaje, y va sincronizado con su casilla en la ventana.
@@ -83,7 +93,20 @@ Un botón con una llave inglesa en el borde del minimapa:
 A la izquierda, una **barra lateral** para elegir la página; la elegida se marca en dorado:
 
 - **General:** para todas las clases: reparar y vender la basura al abrir un vendedor, y el agro en las barras de nombre.
-- **La sección de tu clase**, si la tiene, bajo su nombre en el color de la clase. De momento solo existe **Cazador**, con tres páginas: **Mascota** (aviso del taunt), **Munición** (aviso y umbrales por tipo de arma) y **Aspectos** (aviso y qué aspectos valen). Cada personaje ve solo la de su clase.
+- **La sección de tu clase**, bajo su nombre en el color de la clase. Cada personaje ve solo la de su clase. Un clic en el nombre del grupo lo pliega o lo despliega, y se recuerda.
+  - **Cazador:** Mascota (aviso del taunt), Munición (aviso y umbrales por tipo de arma) y Aspectos (aviso y qué aspectos valen).
+  - **Guerrero:** Gritos (aviso de Grito de guerra).
+  - **Brujo:** Mascota (taunt del abisario), Reactivos (fragmentos de alma con sus umbrales y piedra de salud) y Armadura.
+  - **Paladín:** Aura (aviso y qué auras valen), Bendición y Furia justa.
+
+Las notas largas de una página ocupan lo que necesitan y empujan hacia abajo lo que va detrás.
+
+### Recuadros de aviso
+
+Casi todos los avisos son un recuadro pequeño con un icono y una línea de texto: borde **ámbar** para avisar y **rojo** cuando es más urgente. No suenan ni ocupan el centro de la pantalla, y desaparecen solos en cuanto se arregla lo que avisan.
+
+- **Arrástralos** a donde te molesten menos; la posición de cada uno se guarda por personaje.
+- Los que no has movido se **apilan** uno debajo de otro por debajo del centro de la pantalla, solo los que están a la vista, para que varios avisos a la vez no se tapen.
 
 Pasa el ratón por encima de cada opción para ver qué hace.
 
@@ -146,6 +169,25 @@ Otro recuadro discreto, como el de la munición, para no pelear sin aspecto o co
 
 Los IDs de todos los rangos están en `Const.ASPECT` ([`Core/Constants.lua`](Core/Constants.lua)), comprobados en Wowhead Forever. Sin verificar en Forever: que su cliente dé las auras con `C_UnitAuras` (si no, se usa `UnitBuff`).
 
+### Guerrero: Grito de guerra
+
+Recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango, también el de otro guerrero del grupo. Por defecto **solo en combate**; con la casilla desmarcada avisa siempre. Se configura en **Guerrero › Gritos** o con `/fran grito`.
+
+### Brujo
+
+- **Fragmentos de alma:** recuadro ámbar con menos de **5** («Fragmentos de alma: 3») y rojo con menos de **2** o sin ninguno. Los umbrales se cambian en **Brujo › Reactivos**, como los de la munición; 0 en ámbar apaga el aviso. `/fran fragmentos`.
+- **Piedra de salud:** recuadro ámbar «Sin piedra de salud» si no llevas ninguna (de cualquier tamaño) y sabes crearla. `/fran piedra`.
+- **Armadura:** recuadro ámbar «Sin armadura» si no llevas Piel de demonio ni Armadura demoníaca; el icono es el de la mejor que sabes. Por defecto solo en combate. `/fran armadura`.
+- **Taunt del abisario:** el mismo aviso que el Bramido del cazador, con **Tormento**: desactivado en mazmorra y banda, activado fuera. Se configura en **Brujo › Mascota** o con `/fran aviso`.
+
+### Paladín
+
+- **Aura:** como los aspectos del cazador. Recuadro ámbar «Sin aura» si no llevas ninguna de las marcadas y rojo («Aura: Devoción») si llevas una sin marcar. Por defecto valen todas; se eligen en **Paladín › Aura**, con una casilla con icono por aura. Por defecto solo en combate. `/fran aura`.
+- **Bendición:** recuadro ámbar «Sin bendición» si no llevas ninguna; vale la de cualquier paladín, normal o superior. Por defecto solo en combate. `/fran bendicion`.
+- **Furia justa:** solo en grupo. Si tanqueas y no la llevas, recuadro ámbar «Sin Furia justa»; si la llevas sin tanquear (le robarías los enemigos al tanque), rojo «Furia justa: quítala». Quién tanquea lo dice el rol del grupo si está puesto; si no, la casilla **Tanqueo yo** de **Paladín › Furia justa**. `/fran furia`.
+
+Sin verificar en Forever: que su cliente tenga roles de grupo (`UnitGroupRolesAssigned`); si no, manda la casilla. Wowhead Forever no tiene las bendiciones de Salvación, Luz y Santuario: sus IDs están en la lista igualmente, por si el juego las tiene.
+
 ### Reparar y vender la basura
 
 Para cualquier clase. Al abrir un vendedor, sin tocar nada:
@@ -190,21 +232,33 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`Core/Api.lua`](Core/Api.lua) | *Compartido.* Única puerta a la API del juego: hechizos, objetos, bolsas, mascota, auras, amenaza y barras de nombre, vendedores y dinero, tipo de instancia, avisos en pantalla. Si a un cliente le falta una función, devuelve vacío en lugar de dar un error de Lua |
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
-| [`Features/PetTaunt.lua`](Features/PetTaunt.lua) | Aviso del taunt de la mascota |
+| [`Core/Buffs.lua`](Core/Buffs.lua) | Reconoce qué beneficio de una lista lleva el jugador (por ID o por nombre) y si sabe lanzarlo |
+| [`Core/Thresholds.lua`](Core/Thresholds.lua) | Umbrales ámbar y rojo que cambia el jugador, y el nivel y texto del aviso para una cantidad |
+| [`Features/BuffWarning.lua`](Features/BuffWarning.lua) | Motor de los avisos «no llevas X puesto»: cada uno es una descripción (aspecto, Grito de guerra, armadura, aura, bendición) |
+| [`Features/CountWarning.lua`](Features/CountWarning.lua) | Motor de los avisos «te quedan pocos X» (fragmentos de alma, piedra de salud) |
+| [`Features/PetTaunt.lua`](Features/PetTaunt.lua) | Aviso del taunt de la mascota (Bramido, Tormento) |
 | [`Features/Ammo.lua`](Features/Ammo.lua) | Aviso de munición baja |
-| [`Features/Aspect.lua`](Features/Aspect.lua) | Aviso de aspecto |
+| [`Features/Aspect.lua`](Features/Aspect.lua) | Aviso de aspecto (cazador) |
+| [`Features/Warrior.lua`](Features/Warrior.lua) | Aviso de Grito de guerra |
+| [`Features/Warlock.lua`](Features/Warlock.lua) | Avisos de fragmentos de alma, piedra de salud y armadura |
+| [`Features/Paladin.lua`](Features/Paladin.lua) | Avisos de aura y bendición |
+| [`Features/RighteousFury.lua`](Features/RighteousFury.lua) | Aviso de Furia justa, según si tanqueas |
 | [`Features/Merchant.lua`](Features/Merchant.lua) | Al abrir un vendedor: vende la basura en tandas y después repara |
 | [`Features/Threat.lua`](Features/Threat.lua) | Agro en las barras de nombre: decide el color y el porcentaje de cada enemigo |
 | [`UI/Tooltip.lua`](UI/Tooltip.lua) | *Compartido.* Tooltips de ayuda (título y líneas en gris) |
-| [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda |
+| [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda; los no movidos se apilan |
 | [`UI/ThreatBadge.lua`](UI/ThreatBadge.lua) | Marco de color y texto alrededor de la barra de vida de una barra de nombre, sin tocar la barra |
 | [`UI/Checkbox.lua`](UI/Checkbox.lua) | Casilla: lee y escribe su estado con funciones del módulo que la usa |
 | [`UI/NumberBox.lua`](UI/NumberBox.lua) | Caja numérica: aplica con Intro o al salir, descarta con Escape |
 | [`UI/OptionsPage.lua`](UI/OptionsPage.lua) | Dibuja una página de opciones a partir de filas descritas como datos |
-| [`UI/Sidebar.lua`](UI/Sidebar.lua) | Barra lateral de la ventana: entradas agrupadas bajo títulos |
+| [`UI/OptionRows.lua`](UI/OptionRows.lua) | Filas que se repiten en varias clases: encender el aviso, solo en combate, elegir los que valen, umbrales, taunt de la mascota |
+| [`UI/Sidebar.lua`](UI/Sidebar.lua) | Barra lateral de la ventana: entradas agrupadas bajo títulos que se pliegan con un clic |
 | [`UI/GeneralPage.lua`](UI/GeneralPage.lua) | Página **General**, solo como filas de datos |
 | [`UI/ClassPages/ClassPages.lua`](UI/ClassPages/ClassPages.lua) | Registro de secciones por clase |
 | [`UI/ClassPages/Hunter.lua`](UI/ClassPages/Hunter.lua) | Sección **Cazador**: páginas Mascota, Munición y Aspectos |
+| [`UI/ClassPages/Warrior.lua`](UI/ClassPages/Warrior.lua) | Sección **Guerrero**: página Gritos |
+| [`UI/ClassPages/Warlock.lua`](UI/ClassPages/Warlock.lua) | Sección **Brujo**: páginas Mascota, Reactivos y Armadura |
+| [`UI/ClassPages/Paladin.lua`](UI/ClassPages/Paladin.lua) | Sección **Paladín**: páginas Aura, Bendición y Furia justa |
 | [`UI/ConfigWindow.lua`](UI/ConfigWindow.lua) | La ventana `/fran config` |
 | [`UI/MinimapButton.lua`](UI/MinimapButton.lua) | *Compartido.* Componente de botón del minimapa, hecho a mano sin LibDBIcon |
 | [`UI/Minimap.lua`](UI/Minimap.lua) | El botón del minimapa de este addon |
@@ -239,6 +293,7 @@ Solo se guarda lo que has cambiado respecto a los valores por defecto:
 
 ```lua
 FranToolsChar = {
+    ["sidebar"] = { ["Cazador"] = true },        -- grupo plegado en la ventana
     ["minimap"] = { ["angle"] = 200, ["hidden"] = true },
     ["petTaunt"] = { ["off"] = true },             -- aviso apagado
     ["ammo"] = {
@@ -252,6 +307,9 @@ FranToolsChar = {
     ["repair"] = { ["off"] = true },
     ["junk"] = { ["off"] = true },
     ["threat"] = { ["off"] = true },
+    ["shards"] = { ["thresholds"] = { ["count"] = { ["low"] = 8 } } },
+    ["aura"] = { ["chosen"] = { ["retribution"] = false } },
+    ["righteousFury"] = { ["tank"] = true },      -- casilla Tanqueo yo
 }
 ```
 
@@ -261,16 +319,28 @@ El detalle de cada campo está en la cabecera de [`Core/Storage.lua`](Core/Stora
 
 ## Añadir opciones de una clase
 
-1. Crea `UI/ClassPages/<Clase>.lua` siguiendo el modelo de [`Hunter.lua`](UI/ClassPages/Hunter.lua). Solo describe las páginas y sus filas; los tipos de fila están en [`UI/OptionsPage.lua`](UI/OptionsPage.lua):
+1. La lógica, en `Features/<Clase>.lua`. Si es un aviso de «no llevas X puesto» o «te quedan pocos X», basta con describirlo para los motores [`BuffWarning`](Features/BuffWarning.lua) y [`CountWarning`](Features/CountWarning.lua); el modelo más corto es [`Warrior.lua`](Features/Warrior.lua):
 
    ```lua
-   local _, ns = ...
+   ns.BattleShout = ns.BuffWarning.Create({
+       key = "battleShout",
+       boxName = "FranToolsBattleShoutNotice",
+       classes = { WARRIOR = true },
+       list = { { key = "battleShout", label = "Grito de guerra", spells = { 6673, ... } } },
+       missing = "Sin Grito de guerra",
+       tooltip = { ... },
+   })
+   ```
 
+2. Las páginas, en `UI/ClassPages/<Clase>.lua`, siguiendo el modelo de [`UI/ClassPages/Warrior.lua`](UI/ClassPages/Warrior.lua). Solo describe las páginas y sus filas; las comunes están en [`UI/OptionRows.lua`](UI/OptionRows.lua) y los tipos de fila en [`UI/OptionsPage.lua`](UI/OptionsPage.lua):
+
+   ```lua
    ns.ClassPages.Register("WARRIOR", {
        title = "Guerrero",
        pages = {
            { title = "Gritos", rows = {
-               { kind = "check", label = "…", get = function() … end, set = function(on) … end },
+               Rows.Switch(ns.BattleShout, "Avisar si no llevo Grito de guerra", tooltip),
+               Rows.CombatOnly(ns.BattleShout),
            } },
        },
    })
@@ -278,9 +348,9 @@ El detalle de cada campo está en la cabecera de [`Core/Storage.lua`](Core/Stora
 
    La clave es el nombre interno de la clase en inglés: `WARRIOR`, `PALADIN`, `HUNTER`, `ROGUE`, `PRIEST`, `SHAMAN`, `MAGE`, `WARLOCK`, `DRUID`. Cada página sale en la barra lateral bajo el nombre de la clase, en su color.
 
-2. Añade la línea `UI\ClassPages\<Clase>.lua` al `.toc`, junto a la del cazador.
+3. Añade las dos líneas al `.toc`, junto a las de las otras clases, y su comando a la lista `TOGGLES` de [`Core/Commands.lua`](Core/Commands.lua).
 
-La lógica de cada opción va en su módulo de `Features/`, con `Util.Switch` si es una opción que se enciende y se apaga. Las opciones para todas las clases van en [`UI/GeneralPage.lua`](UI/GeneralPage.lua).
+Un aviso con otra lógica va en su propio módulo de `Features/`, con `Util.Switch` si se enciende y se apaga (como [`RighteousFury.lua`](Features/RighteousFury.lua)). Las opciones para todas las clases van en [`UI/GeneralPage.lua`](UI/GeneralPage.lua).
 
 Los IDs de hechizos y objetos de Forever se consultan en [Wowhead (Forever)](https://www.wowhead.com/forever).
 
@@ -297,13 +367,21 @@ FranTools/
 │   ├── Api.lua                        acceso a la API del juego (compartido)
 │   ├── Storage.lua                    SavedVariables
 │   ├── Migration.lua                  opciones traídas de StreamDeckWoW
+│   ├── Buffs.lua                      beneficios que lleva el jugador
+│   ├── Thresholds.lua                 umbrales de aviso
 │   └── Commands.lua                   comandos /fran
 ├── Features/
+│   ├── BuffWarning.lua                motor de avisos de beneficio
+│   ├── CountWarning.lua               motor de avisos por cantidad
 │   ├── PetTaunt.lua                   aviso del taunt de la mascota
-│   ├── Ammo.lua                       aviso de munición baja
-│   ├── Aspect.lua                     aviso de aspecto
 │   ├── Merchant.lua                   reparar y vender la basura
-│   └── Threat.lua                     agro en las barras de nombre
+│   ├── Threat.lua                     agro en las barras de nombre
+│   ├── Ammo.lua                       cazador: munición baja
+│   ├── Aspect.lua                     cazador: aspecto
+│   ├── Warrior.lua                    guerrero: Grito de guerra
+│   ├── Warlock.lua                    brujo: fragmentos, piedra de salud, armadura
+│   ├── Paladin.lua                    paladín: aura, bendición
+│   └── RighteousFury.lua              paladín: Furia justa
 ├── UI/
 │   ├── Tooltip.lua                    tooltips de ayuda (compartido)
 │   ├── NoticeBox.lua                  recuadro de aviso discreto
@@ -313,9 +391,13 @@ FranTools/
 │   ├── OptionsPage.lua                página de opciones descrita como filas
 │   ├── Sidebar.lua                    barra lateral de la ventana
 │   ├── GeneralPage.lua                página General
+│   ├── OptionRows.lua                 filas comunes a varias clases
 │   ├── ClassPages/                    una sección de páginas por clase
 │   │   ├── ClassPages.lua             registro
-│   │   └── Hunter.lua                 cazador
+│   │   ├── Hunter.lua                 cazador
+│   │   ├── Warrior.lua                guerrero
+│   │   ├── Warlock.lua                brujo
+│   │   └── Paladin.lua                paladín
 │   ├── ConfigWindow.lua               ventana /fran config
 │   ├── MinimapButton.lua              componente de botón del minimapa (compartido)
 │   └── Minimap.lua                    el botón del minimapa de este addon

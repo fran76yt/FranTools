@@ -16,7 +16,7 @@
 
 ## Title: FranTools
 # La descripción va en una sola línea; "|n" es el salto de línea en los textos de WoW.
-## Notes: Avisos del cazador (mascota, munición, aspecto), reparar y vender la basura, y el agro en las barras de nombre.|n/fran
+## Notes: Avisos de cazador, guerrero, brujo y paladín, reparar y vender la basura, y el agro en las barras de nombre.|n/fran
 ## Author: fsegado
 # Versión del addon. Es la única fuente: el código la lee de aquí (Api.AddOnVersion).
 # 0.x mientras sea una versión de pruebas.
@@ -37,24 +37,39 @@ Core\Api.lua
 #   Datos guardados, y las opciones que había en StreamDeckWoW
 Core\Storage.lua
 Core\Migration.lua
+#   Piezas de lógica comunes: beneficios del jugador y umbrales de aviso
+Core\Buffs.lua
+Core\Thresholds.lua
 #   Componentes de interfaz que usan también las funciones
 UI\Tooltip.lua
 UI\NoticeBox.lua
 UI\ThreatBadge.lua
 #   Funciones
+#     motores de aviso que usan varias clases
+Features\BuffWarning.lua
+Features\CountWarning.lua
+#     generales y de cada clase
 Features\PetTaunt.lua
-Features\Ammo.lua
-Features\Aspect.lua
 Features\Merchant.lua
 Features\Threat.lua
+Features\Ammo.lua
+Features\Aspect.lua
+Features\Warrior.lua
+Features\Warlock.lua
+Features\Paladin.lua
+Features\RighteousFury.lua
 #   Ventana de opciones: componentes, páginas y la ventana
 UI\Checkbox.lua
 UI\NumberBox.lua
 UI\OptionsPage.lua
 UI\Sidebar.lua
 UI\GeneralPage.lua
+UI\OptionRows.lua
 UI\ClassPages\ClassPages.lua
 UI\ClassPages\Hunter.lua
+UI\ClassPages\Warrior.lua
+UI\ClassPages\Warlock.lua
+UI\ClassPages\Paladin.lua
 UI\ConfigWindow.lua
 #   Botón del minimapa (componente compartido y el de este addon)
 UI\MinimapButton.lua

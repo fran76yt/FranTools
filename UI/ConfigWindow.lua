@@ -125,7 +125,7 @@ local function create()
     frame = createFrame(left + UI.CONTENT_WIDTH)
     createTitle(frame)
     createPages(frame, list, left)
-    ns.Sidebar.Create(frame, list, showPage):Select(1)
+    ns.Sidebar.Create(frame, list, showPage, ns.Storage.GetSidebar()):Select(1)
 end
 
 --------------------------------------------------------------------------------

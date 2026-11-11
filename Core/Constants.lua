@@ -52,12 +52,15 @@ Const.UI = {
     TITLE = "FranTools",
     TITLE_ICON_SIZE = 16,
     TITLE_ICON_GAP = 4,     -- separación entre el icono y el texto del título
-    HEIGHT = 230,
+    HEIGHT = 250,
     CONTENT_WIDTH = 374,    -- ancho de las páginas, a la derecha de la barra lateral
     PADDING = 20,
     -- Páginas de opciones: filas de arriba abajo.
     PAGE_TOP = -36,                -- primera fila, bajo la barra de título
     ROW_HEIGHT = 26,
+    SECTION_GAP = 8,               -- espacio extra sobre un título que no es el primero
+    NOTE_MARGIN = 6,               -- espacio sobre y bajo una nota (las de varias líneas
+                                   -- ocupan lo que mida su texto)
     CHECK_SIZE = 24,
     CHECK_LABEL_GAP = 2,           -- separación entre la casilla y su texto
     CHECK_COLUMN_WIDTH = 110,      -- ancho de cada casilla en las filas de varias
@@ -91,6 +94,12 @@ Const.UI = {
         ACCENT_COLOR = { 1, 0.82, 0, 1 },
         TEXT_COLOR = { 0.85, 0.85, 0.85 },
         SELECTED_TEXT_COLOR = { 1, 0.82, 0 },
+        -- Botón de plegar o desplegar un grupo, a la derecha de su título: los
+        -- mismos más y menos de las listas plegables del juego.
+        EXPANDED_TEXTURE = "Interface\\Buttons\\UI-MinusButton-Up",
+        COLLAPSED_TEXTURE = "Interface\\Buttons\\UI-PlusButton-Up",
+        TOGGLE_SIZE = 14,
+        TOGGLE_RIGHT = -6,
     },
     -- Color de las líneas de ayuda del tooltip (RGB 0-1).
     TOOLTIP_HELP_COLOR = { 0.8, 0.8, 0.8 },
@@ -100,10 +109,13 @@ Const.UI = {
 -- tanquea el tanque: si la mascota provoca, le quita los enemigos. Fuera, en
 -- solitario, interesa lo contrario: que la mascota los aguante.
 Const.PET_TAUNT = {
-    -- Bramido (Growl en inglés), rangos 1 a 7, según Wowhead Forever. La lista
-    -- vale para cualquier taunt de mascota: añadir sus IDs basta (por ejemplo,
-    -- Tormento del abisario del brujo).
-    SPELLS = { 2649, 14916, 14917, 14918, 14919, 14920, 14921 },
+    -- Taunts de mascota, cada uno con todos sus rangos (según Wowhead
+    -- Forever): Bramido del cazador y Tormento del abisario del brujo. Para
+    -- otro, basta con añadir sus IDs.
+    TAUNTS = {
+        { 2649, 14916, 14917, 14918, 14919, 14920, 14921 },   -- Bramido
+        { 3716, 7809, 7810, 7811, 11774, 11775 },             -- Tormento
+    },
     -- Tipos de instancia (Api.InstanceType) donde debe estar desactivado.
     OFF_IN = { party = true, raid = true },
     -- Espera tras cambiar de zona o de mascota antes de comprobar: al salir de
@@ -129,7 +141,6 @@ Const.AMMO = {
                 icon = "Interface\\Icons\\INV_Ammo_Bullet_02" },
     },
     TYPE_ORDER = { 2, 3 },         -- orden en la ventana
-    MAX_THRESHOLD = 9999,          -- tope de los umbrales (cabe en UI.NUMBER_MAX_DIGITS)
     RANGED_SLOT = 18,              -- ranura del arma a distancia
     AMMO_SLOT = 0,                 -- ranura de la munición (en clientes que la tienen)
     WEAPON_CLASS = 2,              -- clase de objeto "arma"
@@ -140,6 +151,11 @@ Const.AMMO = {
     WEAPON_AMMO = { [2] = 2, [18] = 2, [3] = 3 },
     CHECK_DELAY = 0.5,             -- agrupa las ráfagas de BAG_UPDATE al disparar o lootear
 }
+
+-- Los mismos tipos por su nombre ("arrow", "bullet"), que es como se guardan
+-- sus umbrales.
+Const.AMMO.TYPE_BY_KEY = {}
+for _, info in pairs(Const.AMMO.TYPES) do Const.AMMO.TYPE_BY_KEY[info.key] = info end
 
 -- Aviso de aspecto (Features/Aspect.lua). IDs según Wowhead Forever; todos
 -- los rangos de un aspecto se llaman igual, así que con el nombre del primero
@@ -158,9 +174,69 @@ Const.ASPECT = {
         { key = "pack", label = "Manada", default = false, spells = { 13159 } },
         { key = "beast", label = "Bestia", default = false, spells = { 13161 } },
     },
-    -- En combate UNIT_AURA llega sin parar (cualquier beneficio o perjuicio):
-    -- se agrupa para no repasar las auras con cada uno.
-    CHECK_DELAY = 0.2,
+}
+
+-- En combate UNIT_AURA llega sin parar (cualquier beneficio o perjuicio): los
+-- avisos de beneficios (Features/BuffWarning.lua) lo agrupan para no repasar
+-- las auras con cada uno.
+Const.BUFF_CHECK_DELAY = 0.2
+
+-- Avisos por cantidad de objetos (Features/CountWarning.lua): las ráfagas de
+-- BAG_UPDATE al lootear o gastar se agrupan.
+Const.COUNT_CHECK_DELAY = 0.5
+
+-- Guerrero (Features/Warrior.lua). IDs según Wowhead Forever; en español el
+-- Grito de batalla se llama "Grito de guerra".
+Const.WARRIOR = {
+    BATTLE_SHOUT = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
+}
+
+-- Brujo (Features/Warlock.lua). IDs según Wowhead Forever.
+Const.WARLOCK = {
+    SOUL_SHARD = 6265,
+    SHARDS_LOW = 5,          -- por defecto: ámbar con menos de 5, rojo con menos de 2
+    SHARDS_CRITICAL = 2,
+    -- Piedras de salud de todos los tamaños, con y sin el talento que las mejora.
+    HEALTHSTONES = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009,
+                     5510, 19010, 19011, 9421, 19012, 19013 },
+    CREATE_HEALTHSTONE = { 6201, 6202, 5699, 11729, 11730 },
+    DEMON_SKIN = { 687, 696 },
+    DEMON_ARMOR = { 706, 1086, 11733, 11734, 11735 },
+}
+
+-- Paladín (Features/Paladin.lua y Features/RighteousFury.lua). IDs según
+-- Wowhead Forever. Las auras, como los aspectos: "default" es si vale
+-- mientras el jugador no lo cambie (todas). De las bendiciones vale
+-- cualquiera, la tuya o la de otro paladín, normal o superior.
+Const.PALADIN = {
+    AURAS = {
+        { key = "devotion", label = "Devoción", default = true,
+          spells = { 465, 10290, 643, 10291, 1032, 10292, 10293 } },
+        { key = "retribution", label = "Castigo", default = true,
+          spells = { 7294, 10298, 10299, 10300, 10301 } },
+        { key = "concentration", label = "Concentración", default = true, spells = { 19746 } },
+        { key = "shadow", label = "Sombras", default = true, spells = { 19876, 19895, 19896 } },
+        { key = "frost", label = "Escarcha", default = true, spells = { 19888, 19897, 19898 } },
+        { key = "fire", label = "Fuego", default = true, spells = { 19891, 19899, 19900 } },
+        { key = "sanctity", label = "Santidad", default = true, spells = { 20218 } },
+    },
+    -- Salvación, Luz y Santuario no salen en Wowhead Forever; si el juego no
+    -- las tiene, sus IDs no estorban.
+    BLESSINGS = {
+        { key = "might", label = "Poderío",
+          spells = { 19740, 19834, 19835, 19836, 19837, 19838, 25291, 25782, 25916 } },
+        { key = "wisdom", label = "Sabiduría",
+          spells = { 19742, 19850, 19852, 19853, 19854, 25290, 25894, 25918 } },
+        { key = "kings", label = "Reyes", spells = { 20217, 25898 } },
+        { key = "salvation", label = "Salvación", spells = { 1038, 25895 } },
+        { key = "light", label = "Luz", spells = { 19977, 19978, 19979, 25890 } },
+        { key = "sanctuary", label = "Santuario", spells = { 20911, 20912, 20913, 20914, 25899 } },
+    },
+    -- Furia justa (Righteous Fury): más amenaza con el daño sagrado. La lleva
+    -- el tanque; el resto se la quita para no robarle los enemigos.
+    RIGHTEOUS_FURY = 25780,
+    TANK_ROLE = "TANK",      -- rol del buscador de grupo (UnitGroupRolesAssigned)
+    CHECK_DELAY = 0.5,
 }
 
 -- Vendedor (Features/Merchant.lua): reparar y vender la basura al hablar con
@@ -203,6 +279,9 @@ Const.NOTICE = {
     ICON_SIZE = 24,
     PADDING = 6,
     DEFAULT_POINT = { "CENTER", 0, -160 },   -- algo por debajo del centro de la pantalla
+    -- Los recuadros que el jugador no ha movido se apilan desde DEFAULT_POINT
+    -- hacia abajo, con esta separación, para no taparse unos a otros.
+    STACK_GAP = 4,
     BACKGROUND = "Interface\\Tooltips\\UI-Tooltip-Background",
     BORDER = "Interface\\Tooltips\\UI-Tooltip-Border",
     BORDER_SIZE = 12,

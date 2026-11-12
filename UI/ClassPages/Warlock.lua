@@ -27,6 +27,7 @@ local reagentsPage = {
         { Rows.Switch(ns.Shards, "Avisar con pocos fragmentos de alma", {
             "Aviso de fragmentos de alma",
             "Un recuadro discreto cuando te quedan pocos, según los umbrales de abajo.",
+            "Solo desde que sabes Drenar alma (nivel 10), que es lo que los da.",
             "También con /fran fragmentos.",
         }) },
         Rows.Thresholds(ns.Shards, "Fragmentos de alma"),

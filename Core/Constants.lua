@@ -13,8 +13,8 @@ y una tabla privada que comparten todos sus archivos. Usamos esa tabla (ns,
 que podrían chocar con otros addons.
 
 Los archivos compartidos con StreamDeckWoW (ver tools/sync_shared.py) leen de
-aquí ADDON_NAME, ICON, MSG.SETTINGS_CHANGED, CHAT_PREFIX, UI.TOOLTIP_HELP_COLOR
-y MINIMAP: los dos addons tienen que definirlos.
+aquí ADDON_NAME, ICON, MSG.SETTINGS_CHANGED, CHAT_PREFIX, UI.TOOLTIP_HELP_COLOR,
+MINIMAP y ERROR_LOG: los dos addons tienen que definirlos.
 ]]
 
 local addonName, ns = ...
@@ -200,6 +200,9 @@ Const.WARLOCK = {
     HEALTHSTONES = { 5512, 19004, 19005, 5511, 19006, 19007, 5509, 19008, 19009,
                      5510, 19010, 19011, 9421, 19012, 19013 },
     CREATE_HEALTHSTONE = { 6201, 6202, 5699, 11729, 11730 },
+    -- Drenar alma, todos los rangos: es lo que da fragmentos. Hasta nivel 10
+    -- no se aprende, y antes no tiene sentido avisar de que no hay ninguno.
+    DRAIN_SOUL = { 1120, 8288, 8289, 11675 },
     DEMON_SKIN = { 687, 696 },
     DEMON_ARMOR = { 706, 1086, 11733, 11734, 11735 },
 }
@@ -291,6 +294,15 @@ Const.NOTICE = {
         warning = { 1, 0.75, 0 },
         critical = { 1, 0.25, 0.25 },
     },
+}
+
+-- Registro de errores de Lua (Core/ErrorLog.lua, compartido).
+Const.ERROR_LOG = {
+    SAVED_VAR = "FranToolsLog",       -- variable de la cuenta (## SavedVariables del .toc)
+    COMMAND = "/fran errores",       -- para el aviso del chat y la ayuda
+    MAX_ENTRIES = 50,                  -- errores distintos que se guardan como mucho
+    MAX_STACK_CHARS = 2000,            -- tope de la pila de cada uno, para no inflar el archivo
+    STACK_COLOR = "999999",            -- gris para la pila en el chat
 }
 
 -- Botón del minimapa. Las medidas y texturas son las del aro estándar que usan

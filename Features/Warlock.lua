@@ -4,6 +4,7 @@ Ayudas del brujo
 
   Fragmentos de alma   recuadro cuando quedan pocos, con umbrales que se
                        cambian en la ventana (Features/CountWarning.lua).
+                       Solo si sabes Drenar alma, que es lo que los da.
   Piedra de salud      recuadro si no llevas ninguna y sabes crearla.
   Armadura             recuadro si no llevas Piel de demonio ni Armadura
                        demoníaca (Features/BuffWarning.lua).
@@ -21,6 +22,7 @@ ns.Shards = ns.CountWarning.Create({
     boxName = "FranToolsShardsNotice",
     classes = CLASSES,
     items = { W.SOUL_SHARD },
+    requires = W.DRAIN_SOUL,
     low = W.SHARDS_LOW,
     critical = W.SHARDS_CRITICAL,
     texts = { none = "Sin fragmentos de alma", critical = "Fragmentos de alma: %d", low = "Fragmentos de alma: %d" },

@@ -18,6 +18,8 @@ Comandos de chat
   /fran aura       apagar o encender el aviso de aura (paladín)
   /fran bendicion  apagar o encender el aviso de bendición (paladín)
   /fran furia      apagar o encender el aviso de Furia justa (paladín)
+  /fran errores    errores de Lua apuntados (/fran errores 2: uno con su pila;
+                   /fran errores borrar: vaciar la lista)
   /fran ayuda      versión y lista de comandos (también con cualquier otro texto)
 
 Cada subcomando es una función en la tabla "commands": añadir uno nuevo es
@@ -93,6 +95,11 @@ function commands.minimapa()
     Util.Print(shown and "botón del minimapa visible." or "botón del minimapa oculto. /fran minimapa para recuperarlo.")
 end
 
+-- Lo que va detrás ("2", "borrar") lo interpreta el propio registro.
+function commands.errores(arg)
+    ns.ErrorLog.Command(arg)
+end
+
 function commands.ayuda()
     Util.Print("versión %s. Comandos:", ns.Api.AddOnVersion())
     print("  /fran  -  abrir las opciones (también /fran config o clic en el botón del minimapa)")
@@ -100,6 +107,7 @@ function commands.ayuda()
     for _, t in ipairs(TOGGLES) do
         print(("  /fran %s  -  %s"):format(t[1], t[4]))
     end
+    print("  /fran errores  -  errores de Lua apuntados (con un número, uno entero; borrar, vaciar la lista)")
     print("  /fran ayuda  -  esta ayuda")
 end
 
@@ -109,16 +117,16 @@ commands[""] = commands.config
 --------------------------------------------------------------------------------
 -- Registro del comando
 --------------------------------------------------------------------------------
--- Ejecuta el subcomando escrito tras /fran. Un subcomando desconocido muestra
--- la ayuda. Se publica en ns para que otras partes de la interfaz lancen los
+-- Ejecuta el subcomando escrito tras /fran, pasándole el resto del texto. Un
+-- subcomando desconocido muestra la ayuda. Se publica en ns para que otras partes de la interfaz lancen los
 -- mismos comandos sin repetir su código.
 local Commands = {}
 ns.Commands = Commands
 
 function Commands.Run(msg)
-    local name = (msg or ""):match("^%s*(%S*)"):lower()
-    local run = commands[name] or commands.ayuda
-    run()
+    local name, rest = (msg or ""):match("^%s*(%S*)%s*(.-)%s*$")
+    local run = commands[name:lower()] or commands.ayuda
+    run(rest)
 end
 
 -- WoW registra comandos con la convención SLASH_<NOMBRE>1 + SlashCmdList.<NOMBRE>.

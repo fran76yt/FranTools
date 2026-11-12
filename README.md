@@ -74,6 +74,7 @@ El nombre de la carpeta tiene que coincidir con el del `.toc`. En la pantalla de
 | `/fran aura` | Paladín: apaga o enciende el aviso de aura |
 | `/fran bendicion` | Paladín: apaga o enciende el aviso de bendición |
 | `/fran furia` | Paladín: apaga o enciende el aviso de Furia justa |
+| `/fran errores` | Errores de Lua apuntados; con un número, uno entero; con `borrar`, vacía la lista (ver [Registro de errores](#registro-de-errores)) |
 | `/fran ayuda` | Versión del addon y lista de comandos (también sale con cualquier otro texto) |
 
 Todo lo que se apaga o enciende se recuerda por personaje, y va sincronizado con su casilla en la ventana.
@@ -175,7 +176,7 @@ Recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango,
 
 ### Brujo
 
-- **Fragmentos de alma:** recuadro ámbar con menos de **5** («Fragmentos de alma: 3») y rojo con menos de **2** o sin ninguno. Los umbrales se cambian en **Brujo › Reactivos**, como los de la munición; 0 en ámbar apaga el aviso. `/fran fragmentos`.
+- **Fragmentos de alma:** recuadro ámbar con menos de **5** («Fragmentos de alma: 3») y rojo con menos de **2** o sin ninguno, desde que sabes **Drenar alma** (nivel 10), que es lo que los da. Los umbrales se cambian en **Brujo › Reactivos**, como los de la munición; 0 en ámbar apaga el aviso. `/fran fragmentos`.
 - **Piedra de salud:** recuadro ámbar «Sin piedra de salud» si no llevas ninguna (de cualquier tamaño) y sabes crearla. `/fran piedra`.
 - **Armadura:** recuadro ámbar «Sin armadura» si no llevas Piel de demonio ni Armadura demoníaca; el icono es el de la mejor que sabes. Por defecto solo en combate. `/fran armadura`.
 - **Taunt del abisario:** el mismo aviso que el Bramido del cazador, con **Tormento**: desactivado en mazmorra y banda, activado fuera. Se configura en **Brujo › Mascota** o con `/fran aviso`.
@@ -228,8 +229,9 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | Archivo | Responsabilidad |
 |---|---|
 | [`Core/Constants.lua`](Core/Constants.lua) | Todos los valores fijos: IDs de hechizos, umbrales, tiempos, colores y medidas |
-| [`Core/Util.lua`](Core/Util.lua) | *Compartido.* Utilidades genéricas: eventos, mensajes entre módulos, temporizadores y *debounce*, ejecutar fuera de combate, interruptores de opciones (`Util.Switch`), guardar solo lo que difiere del valor por defecto (`Util.SetOverride`), escribir en el chat |
+| [`Core/Util.lua`](Core/Util.lua) | *Compartido.* Utilidades genéricas: llamadas protegidas (`Util.SafeCall`, el *try/catch* de Lua: cada función de un evento se ejecuta aparte, y si falla no corta las demás), eventos, mensajes entre módulos, temporizadores y *debounce*, ejecutar fuera de combate, interruptores de opciones (`Util.Switch`), guardar solo lo que difiere del valor por defecto (`Util.SetOverride`), escribir en el chat |
 | [`Core/Api.lua`](Core/Api.lua) | *Compartido.* Única puerta a la API del juego: hechizos, objetos, bolsas, mascota, auras, amenaza y barras de nombre, vendedores y dinero, tipo de instancia, avisos en pantalla. Si a un cliente le falta una función, devuelve vacío en lugar de dar un error de Lua |
+| [`Core/ErrorLog.lua`](Core/ErrorLog.lua) | *Compartido.* Registro de errores: se pone delante del manejador de errores del juego, apunta los de este addon en una variable de la cuenta (sin repetir, con contador y como mucho 50) y los muestra con `/fran errores` |
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
 | [`Core/Buffs.lua`](Core/Buffs.lua) | Reconoce qué beneficio de una lista lleva el jugador (por ID o por nombre) y si sabe lanzarlo |
@@ -268,7 +270,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 
 ## Código compartido con StreamDeckWoW
 
-Los dos addons usan las mismas piezas genéricas: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`UI/Tooltip.lua`](UI/Tooltip.lua) y [`UI/MinimapButton.lua`](UI/MinimapButton.lua). Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin el otro.
+Los dos addons usan las mismas piezas genéricas: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua), [`UI/Tooltip.lua`](UI/Tooltip.lua) y [`UI/MinimapButton.lua`](UI/MinimapButton.lua). Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin el otro.
 
 El original está aquí. Con StreamDeckWoW en la misma carpeta `AddOns`:
 
@@ -277,13 +279,28 @@ python tools/sync_shared.py           # copia los archivos compartidos a StreamD
 python tools/sync_shared.py --check   # solo comprueba que son iguales
 ```
 
-Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que los dos addons definen (están en su cabecera): `ADDON_NAME`, `ICON`, `MSG.SETTINGS_CHANGED`, `CHAT_PREFIX`, `UI.TOOLTIP_HELP_COLOR` y `MINIMAP`.
+Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que los dos addons definen (están en su cabecera): `ADDON_NAME`, `ICON`, `MSG.SETTINGS_CHANGED`, `CHAT_PREFIX`, `UI.TOOLTIP_HELP_COLOR`, `MINIMAP` y `ERROR_LOG`.
+
+### Registro de errores
+
+Si el addon da un error de Lua, queda apuntado aunque el juego tenga apagada la ventana de errores (lo normal). La primera vez en cada sesión sale un aviso en el chat.
+
+| Comando | Qué hace |
+|---|---|
+| `/fran errores` | Lista los errores apuntados, con la fecha de la última vez y cuántas veces ha salido cada uno |
+| `/fran errores 2` | El error número 2 entero, con su pila de llamadas (qué función llamó a cuál hasta fallar) |
+| `/fran errores borrar` | Vacía la lista |
+
+- Se guardan en una variable de **toda la cuenta**, en `WTF\Account\<CUENTA>\SavedVariables\FranTools.lua`: se ven con cualquier personaje y se pueden abrir con un editor de texto.
+- Cada error distinto se guarda una vez, con un contador (en combate el mismo puede salir cientos de veces), y como mucho 50: al pasarse se borran los más antiguos.
+- Solo los de este addon; los demás siguen su camino como siempre. Con BugSack, que se queda con todos los errores, puede que aquí no llegue nada: entonces se ven en BugSack.
+- Un error en una función ya no impide que se ejecuten las demás que esperaban el mismo evento.
 
 ---
 
 ## Datos guardados
 
-Una variable por personaje, `FranToolsChar`, en:
+Los errores de Lua apuntados van aparte, en `FranToolsLog`, una variable de toda la cuenta (ver [Registro de errores](#registro-de-errores)). Las opciones, en una variable por personaje, `FranToolsChar`, en:
 
 ```
 World of Warcraft\_forever_\WTF\Account\<CUENTA>\<Reino>\<Personaje>\SavedVariables\FranTools.lua
@@ -365,6 +382,7 @@ FranTools/
 │   ├── Constants.lua                  valores fijos
 │   ├── Util.lua                       utilidades genéricas (compartido)
 │   ├── Api.lua                        acceso a la API del juego (compartido)
+│   ├── ErrorLog.lua                   registro de errores de Lua (compartido)
 │   ├── Storage.lua                    SavedVariables
 │   ├── Migration.lua                  opciones traídas de StreamDeckWoW
 │   ├── Buffs.lua                      beneficios que lleva el jugador

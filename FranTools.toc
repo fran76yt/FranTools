@@ -29,11 +29,18 @@
 # Se escribe al hacer /reload, al cerrar sesión o al salir del juego.
 ## SavedVariablesPerCharacter: FranToolsChar
 
+# Variable de toda la cuenta, en WTF\Account\<cuenta>\SavedVariables\FranTools.lua:
+# los errores de Lua apuntados (Core/ErrorLog.lua), sean del personaje que sean.
+## SavedVariables: FranToolsLog
+
 # Orden de carga: cada módulo usa los que se han cargado antes que él.
 #   Constantes y utilidades genéricas (Util y Api, compartidas con StreamDeckWoW)
 Core\Constants.lua
 Core\Util.lua
 Core\Api.lua
+#   Registro de errores: lo antes posible, para que apunte también los
+#   errores al cargar los archivos siguientes
+Core\ErrorLog.lua
 #   Datos guardados, y las opciones que había en StreamDeckWoW
 Core\Storage.lua
 Core\Migration.lua

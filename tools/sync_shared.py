@@ -3,7 +3,7 @@ Copia el código compartido de FranTools a StreamDeckWoW
 =======================================================
 
 Los dos addons usan las mismas piezas genéricas: utilidades, acceso a la API
-del juego, tooltips y el botón del minimapa. WoW no deja que un addon cargue
+del juego, el registro de errores, tooltips y el botón del minimapa. WoW no deja que un addon cargue
 archivos de otro sin depender de él, así que cada uno lleva su copia, como se
 hace con las librerías de addons. El original está en FranTools y este script
 lo copia a StreamDeckWoW, que debe estar al lado (en la misma carpeta AddOns).
@@ -24,6 +24,7 @@ from pathlib import Path
 SHARED_FILES = [
     "Core/Util.lua",
     "Core/Api.lua",
+    "Core/ErrorLog.lua",
     "UI/Tooltip.lua",
     "UI/MinimapButton.lua",
 ]

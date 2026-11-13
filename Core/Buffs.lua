@@ -20,13 +20,18 @@ nombre sale del juego (va en su idioma) y solo se puede pedir con el
 personaje cargado, por eso se mira al comprobar y no al crear la lista.
 
 En combate el cliente moderno oculta a los addons la lista de beneficios. Si
-pasa, se pregunta hechizo a hechizo (Api.HasPlayerAura), que puede seguir
-permitido; si tampoco, Active devuelve nil, false y quien la usa decide qué
-hacer; Current recuerda lo último que se leyó.
+pasa, se pregunta hechizo a hechizo (Api.HasPlayerAura), pero esa respuesta
+solo vale para confirmar que lo lleva: con los datos ocultos el juego
+contesta "no" aunque lo lleves. Si no se confirma, Active devuelve nil, false
+y quien la usa decide qué hacer; Current recuerda lo último que se supo.
+
+Lo que el jugador lanza él mismo (un grito, una armadura, un aura) se apunta
+al lanzarlo (UNIT_SPELLCAST_SUCCEEDED), que el juego sí cuenta en combate.
+Así un beneficio puesto en mitad de la pelea también se sabe.
 ]]
 
 local _, ns = ...
-local Api = ns.Api
+local Util, Api = ns.Util, ns.Api
 
 local Buffs = {}
 ns.Buffs = Buffs
@@ -55,16 +60,16 @@ local function activeFromList(list)
     return nil, true
 end
 
--- Preguntando por cada rango de cada elemento.
+-- Preguntando por cada rango de cada elemento. Solo confirma: un "no" con la
+-- lista oculta no es fiable (el juego también dice "no" cuando oculta el
+-- dato), así que no encontrarlo es "no se sabe".
 local function activeByID(list)
     for _, item in ipairs(list.items) do
         for _, id in ipairs(item.spells) do
-            local has = Api.HasPlayerAura(id)
-            if has == nil then return nil, false end
-            if has then return item, true end
+            if Api.HasPlayerAura(id) then return item, true end
         end
     end
-    return nil, true
+    return nil, false
 end
 
 function methods:Active()
@@ -82,6 +87,13 @@ function methods:Current()
     return self.last
 end
 
+-- Apunta el elemento de un hechizo que acaba de lanzar el jugador, si es de
+-- la lista: será el último que se sabe que lleva.
+function methods:RememberCast(spellID)
+    local item = self.byID[spellID]
+    if item then self.last = item end
+end
+
 function methods:IsKnown(item)
     for _, id in ipairs(item.spells) do
         if Api.IsSpellKnown(id) then return true end
@@ -95,5 +107,10 @@ function Buffs.List(items)
         for _, id in ipairs(item.spells) do list.byID[id] = item end
     end
     for name, fn in pairs(methods) do list[name] = fn end
+    -- El ID del hechizo lanzado puede llegar oculto, como las auras: entonces
+    -- no se apunta nada.
+    Util.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID)
+        if unit == "player" and not Api.IsSecret(spellID) then list:RememberCast(spellID) end
+    end)
     return list
 end

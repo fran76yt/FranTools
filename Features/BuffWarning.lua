@@ -146,9 +146,13 @@ end
 
 local function listenEvents(w)
     local checkSoon = Util.Debounce(Const.BUFF_CHECK_DELAY, function() w.Check() end)
-    Util.On("UNIT_AURA", function(unit)
+    local function onPlayer(unit)
         if unit == "player" then checkSoon() end
-    end)
+    end
+    -- Tras lanzar algo también: en combate es la única forma de saber que se
+    -- ha puesto un beneficio (Core/Buffs.lua).
+    Util.On("UNIT_AURA", onPlayer)
+    Util.On("UNIT_SPELLCAST_SUCCEEDED", onPlayer)
     for _, event in ipairs(CHECK_EVENTS) do Util.On(event, checkSoon) end
 end
 

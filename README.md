@@ -171,7 +171,7 @@ Otro recuadro discreto, como el de la munición, para no pelear sin aspecto o co
 
 Los IDs de todos los rangos están en `Const.ASPECT` ([`Core/Constants.lua`](Core/Constants.lua)), comprobados en Wowhead Forever.
 
-**En combate**, el cliente de Forever oculta a los addons la lista de beneficios (comprobado en el juego: es un «valor secreto» y pedirla da un error). Entonces el addon pregunta hechizo a hechizo, por si eso sí lo deja, y si tampoco, usa lo último que leyó antes de empezar la pelea. Así, si entras en combate sin el beneficio, el aviso sigue saliendo; lo que no puede saber es si se te cae a mitad de pelea. Vale para todos los avisos de beneficios: aspecto, Grito de guerra, armadura, aura, bendición y Furia justa.
+**En combate**, el cliente de Forever oculta a los addons la lista de beneficios (comprobado en el juego: es un «valor secreto» y pedirla da un error). Entonces el addon usa lo último que supo: lo que leyó antes de empezar la pelea y lo que **lances tú** durante ella (el juego sí cuenta qué hechizos lanzas). Así, si entras en combate sin el beneficio, el aviso sale, y se quita en cuanto te lo pones. Preguntar hechizo a hechizo solo sirve para confirmar que lo llevas, porque con los datos ocultos el juego contesta «no» aunque lo lleves. Lo que no puede saber es si se te cae a mitad de pelea, ni un beneficio que te ponga otro jugador en combate. Vale para todos los avisos de beneficios: aspecto, Grito de guerra, armadura, aura, bendición y Furia justa.
 
 ### Guerrero: Grito de guerra
 

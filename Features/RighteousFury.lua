@@ -89,9 +89,13 @@ end
 
 local checkSoon = Util.Debounce(P.CHECK_DELAY, RighteousFury.Check)
 
-Util.On("UNIT_AURA", function(unit)
+local function onPlayer(unit)
     if unit == "player" then checkSoon() end
-end)
+end
+-- Tras lanzar algo también: en combate es la única forma de saber que se la
+-- ha puesto (Core/Buffs.lua).
+Util.On("UNIT_AURA", onPlayer)
+Util.On("UNIT_SPELLCAST_SUCCEEDED", onPlayer)
 -- Al entrar o salir de un grupo, al cambiar los roles, al aprenderla y al
 -- morir o revivir.
 for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "GROUP_ROSTER_UPDATE", "PLAYER_ROLES_ASSIGNED",

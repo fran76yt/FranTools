@@ -98,3 +98,44 @@ end
 
 local switch = Util.Switch(Storage.GetThreat, function() Threat.UpdateAll() end)
 Threat.IsEnabled, Threat.SetEnabled, Threat.Toggle = switch.IsEnabled, switch.SetEnabled, switch.Toggle
+
+--------------------------------------------------------------------------------
+-- Diagnóstico
+--------------------------------------------------------------------------------
+-- Si no se ve nada, cada paso del camino puede fallar en un cliente distinto
+-- (sin amenaza, barras de nombre de otra forma...). Esto los repasa con el
+-- objetivo para saber cuál, desde el chat: /fran agro estado.
+
+local function yesNo(value)
+    return value and "sí" or "no"
+end
+
+local function threatText(t)
+    if not t then return "nada (no estáis en combate)" end
+    return ("tanqueando %s, situación %s, %s%%"):format(yesNo(t.tanking), tostring(t.status), tostring(t.percent))
+end
+
+local function statusLines(unit)
+    local plate = Api.NamePlateFor(unit)
+    local badge = plate and ns.ThreatBadge.Get(plate)
+    return {
+        ("aviso: %s"):format(Threat.IsEnabled() and "encendido" or "apagado (/fran agro)"),
+        ("el juego da la amenaza: %s"):format(yesNo(Api.HasThreat())),
+        ("objetivo: %s, enemigo: %s"):format(tostring(Api.UnitName(unit)), yesNo(Api.CanAttack(unit))),
+        ("barra de nombre: %s"):format(plate and "sí" or "no (¿están a la vista? tecla V)"),
+        ("barra de vida dentro: %s"):format(yesNo(plate and Api.NamePlateHealthBar(plate))),
+        ("tu amenaza: %s"):format(threatText(Api.Threat("player", unit))),
+        ("la de tu mascota: %s"):format(threatText(Api.Threat("pet", unit))),
+        ("marco de agro: %s"):format(badge and (badge:IsShown() and "visible" or "oculto") or "sin crear"),
+    }
+end
+
+function Threat.PrintStatus()
+    if not Api.UnitName("target") then
+        Util.Print("selecciona un enemigo y repite /fran agro estado.")
+        return
+    end
+    Threat.Update("target")
+    Util.Print("agro del objetivo, paso a paso:")
+    for _, line in ipairs(statusLines("target")) do print("  " .. line) end
+end

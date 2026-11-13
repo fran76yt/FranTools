@@ -51,10 +51,12 @@ local function createEdges(f)
 end
 
 -- Va colgado de la barra de nombre (se oculta con ella) y rodea su barra de
--- vida, o la barra entera si su diseño no tiene una donde se espera.
+-- vida, o la barra entera si su diseño no tiene una donde se espera. Se pone
+-- por encima de esa barra: si no, su propio borde tapa el nuestro.
 local function create(plate)
     local around = Api.NamePlateHealthBar(plate) or plate
     local f = CreateFrame("Frame", nil, plate)
+    f:SetFrameLevel(around:GetFrameLevel() + T.LEVEL_ABOVE)
     f:SetPoint("TOPLEFT", around, "TOPLEFT", -T.BORDER, T.BORDER)
     f:SetPoint("BOTTOMRIGHT", around, "BOTTOMRIGHT", T.BORDER, -T.BORDER)
     createEdges(f)

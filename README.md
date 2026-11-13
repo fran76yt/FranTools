@@ -67,6 +67,7 @@ El nombre de la carpeta tiene que coincidir con el del `.toc`. En la pantalla de
 | `/fran reparar` | Apaga o enciende reparar al abrir un vendedor |
 | `/fran basura` | Apaga o enciende vender la basura al abrir un vendedor |
 | `/fran agro` | Apaga o enciende el agro en las barras de nombre |
+| `/fran agro estado` | Con un enemigo seleccionado, repasa paso a paso por qué se ve o no el agro (ver [Agro en las barras de nombre](#agro-en-las-barras-de-nombre)) |
 | `/fran grito` | Guerrero: apaga o enciende el aviso de Grito de guerra |
 | `/fran fragmentos` | Brujo: apaga o enciende el aviso de fragmentos de alma |
 | `/fran piedra` | Brujo: apaga o enciende el aviso de piedra de salud |
@@ -178,7 +179,7 @@ Recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango,
 
 - **Fragmentos de alma:** recuadro ámbar con menos de **5** («Fragmentos de alma: 3») y rojo con menos de **2** o sin ninguno, desde que sabes **Drenar alma** (nivel 10), que es lo que los da. Los umbrales se cambian en **Brujo › Reactivos**, como los de la munición; 0 en ámbar apaga el aviso. `/fran fragmentos`.
 - **Piedra de salud:** recuadro ámbar «Sin piedra de salud» si no llevas ninguna (de cualquier tamaño) y sabes crearla. `/fran piedra`.
-- **Armadura:** recuadro ámbar «Sin armadura» si no llevas Piel de demonio ni Armadura demoníaca; el icono es el de la mejor que sabes. Por defecto solo en combate. `/fran armadura`.
+- **Armadura:** recuadro ámbar «Sin armadura» si no llevas Piel de demonio ni Armadura demoníaca; el icono es el de la mejor que sabes. Avisa **también fuera de combate** de entrada, porque dura media hora y se pone antes de empezar; la casilla **Solo en combate** de **Brujo › Armadura** lo cambia. `/fran armadura`.
 - **Taunt del abisario:** el mismo aviso que el Bramido del cazador, con **Tormento**: desactivado en mazmorra y banda, activado fuera. Se configura en **Brujo › Mascota** o con `/fran aviso`.
 
 ### Paladín
@@ -217,6 +218,8 @@ Para cualquier clase. En la barra de nombre de cada enemigo con el que estáis e
 - Si solo la mascota está en combate con el enemigo, el marco sale sin porcentaje.
 - No cambia la barra de vida en sí (el juego la volvería a pintar con su color); el marco va por fuera.
 - Se apaga o enciende en **General** de `/fran config`, o con `/fran agro`. Viene encendido.
+- El marco va por encima de la barra de vida, para que su propio borde no lo tape. Sirve con las barras de nombre de los clientes clásicos y de los modernos (la barra de vida está en sitios distintos).
+- **Si no se ve:** selecciona un enemigo con el que estés en combate y escribe `/fran agro estado`. Dice, paso a paso, si el aviso está encendido, si el juego da la amenaza, si el objetivo tiene barra de nombre y barra de vida, qué amenaza tenéis tú y la mascota, y si el marco está puesto.
 
 Sin verificar en Forever: que su cliente dé la amenaza (`UnitDetailedThreatSituation`; si no, no se ve nada) y que sus barras de nombre sean las de Blizzard. Con otro addon que las sustituya, el marco rodea la barra entera o no se ve.
 

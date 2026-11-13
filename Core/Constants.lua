@@ -269,6 +269,7 @@ Const.THREAT = {
     },
     BORDER = 2,        -- grosor del marco
     TEXT_GAP = 3,      -- separación del porcentaje a la derecha de la barra
+    LEVEL_ABOVE = 5,   -- capas por encima de la barra de vida (y de su borde)
     -- En combate la amenaza cambia sin parar y llega un evento por cada
     -- cambio: se agrupan y se repasan todas las barras a la vez.
     UPDATE_DELAY = 0.1,

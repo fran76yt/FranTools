@@ -14,6 +14,8 @@ paladín. Cada uno es una descripción y este archivo hace el resto:
       choosable = true,                  -- el jugador elige cuáles valen
       missing = "Sin aspecto",           -- texto sin ninguno (ámbar)
       wrong = "Aspecto: %s",             -- con uno que no vale (rojo)
+      anytime = true,                    -- opcional: avisar también fuera de
+                                         -- combate de entrada
       tooltip = { ... },
   })
 
@@ -27,7 +29,9 @@ El icono es el del primer elemento que vale y que el jugador sabe usar: el
 que toca ponerse. Sin choosable valen todos (cualquier bendición sirve).
 
 Por defecto solo avisa en combate, para no molestar mientras viajas o
-descansas; se puede hacer que avise siempre. No avisa muerto ni de lo que aún
+descansas; se puede hacer que avise siempre. Los beneficios largos que se
+ponen antes de empezar (la armadura del brujo) avisan siempre de entrada
+(def.anytime); el jugador puede cambiar cualquiera de los dos. No avisa muerto ni de lo que aún
 no has aprendido: si no sabes usar ninguno de los que valen, no hay aviso.
 
 Cada aviso creado tiene IsEnabled/SetEnabled/Toggle, IsCombatOnly/
@@ -77,14 +81,21 @@ function methods.SetChosen(w, item, on)
     w.Changed()
 end
 
--- Se guarda al revés (anytime) para que lo normal, solo en combate, no ocupe
+-- Se guarda como anytime (avisa también fuera de combate) y solo si difiere
+-- del valor por defecto del aviso (def.anytime), para que lo normal no ocupe
 -- nada en el archivo.
+local function anytimeDefault(w)
+    return w.def.anytime == true
+end
+
 function methods.IsCombatOnly(w)
-    return not w.Settings().anytime
+    local saved = w.Settings().anytime
+    if saved == nil then return not anytimeDefault(w) end
+    return not saved
 end
 
 function methods.SetCombatOnly(w, on)
-    w.Settings().anytime = (not on) or nil
+    Util.SetOverride(w.Settings(), "anytime", not on, anytimeDefault(w))
     w.Changed()
 end
 

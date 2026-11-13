@@ -7,7 +7,8 @@ Ayudas del brujo
                        Solo si sabes Drenar alma, que es lo que los da.
   Piedra de salud      recuadro si no llevas ninguna y sabes crearla.
   Armadura             recuadro si no llevas Piel de demonio ni Armadura
-                       demoníaca (Features/BuffWarning.lua).
+                       demoníaca (Features/BuffWarning.lua). También fuera
+                       de combate, salvo que el jugador lo cambie.
 
 El taunt del abisario (Tormento) lo vigila el mismo aviso que el Bramido del
 cazador (Features/PetTaunt.lua).
@@ -61,6 +62,9 @@ ns.DemonArmor = ns.BuffWarning.Create({
         { key = "demonSkin", label = "Piel de demonio", spells = W.DEMON_SKIN },
     },
     missing = "Sin armadura",
+    -- Dura media hora y se pone antes de empezar: el aviso sirve justo fuera
+    -- de combate, para no entrar en una pelea sin ella.
+    anytime = true,
     tooltip = {
         "Armadura del brujo",
         "No llevas Piel de demonio ni Armadura demoníaca.",

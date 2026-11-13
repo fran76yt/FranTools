@@ -11,6 +11,7 @@ Comandos de chat
   /fran reparar    apagar o encender reparar al abrir un vendedor
   /fran basura     apagar o encender vender la basura al abrir un vendedor
   /fran agro       apagar o encender el agro en las barras de nombre
+  /fran agro estado  repasar paso a paso el agro del objetivo (si no se ve)
   /fran grito      apagar o encender el aviso de Grito de guerra (guerrero)
   /fran fragmentos apagar o encender el aviso de fragmentos de alma (brujo)
   /fran piedra     apagar o encender el aviso de piedra de salud (brujo)
@@ -82,6 +83,16 @@ for _, t in ipairs(TOGGLES) do
     commands[t[1]] = toggleCommand(t[1], t[2], t[3])
 end
 
+-- "agro" además tiene un diagnóstico: con "estado" no cambia nada.
+local toggleThreat = commands.agro
+function commands.agro(arg)
+    if arg == "estado" then
+        ns.Threat.PrintStatus()
+    else
+        toggleThreat()
+    end
+end
+
 --------------------------------------------------------------------------------
 -- Resto de subcomandos
 --------------------------------------------------------------------------------
@@ -107,6 +118,7 @@ function commands.ayuda()
     for _, t in ipairs(TOGGLES) do
         print(("  /fran %s  -  %s"):format(t[1], t[4]))
     end
+    print("  /fran agro estado  -  repasar paso a paso el agro del objetivo, si no se ve")
     print("  /fran errores  -  errores de Lua apuntados (con un número, uno entero; borrar, vaciar la lista)")
     print("  /fran ayuda  -  esta ayuda")
 end

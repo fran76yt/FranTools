@@ -39,7 +39,9 @@ lo que el jugador ha cambiado:
   battleShout, demonArmor, aura, blessing
              avisos de beneficio (Features/BuffWarning.lua) del guerrero,
              el brujo y el paladín: off, point y anytime como en aspect; el
-             aura también chosen
+             aura también chosen. En demonArmor, que avisa siempre de
+             entrada, anytime = false si el jugador lo ha dejado solo en
+             combate
   shards, healthstone
              avisos por cantidad (Features/CountWarning.lua) del brujo: off,
              point y, los fragmentos, thresholds = { count = { low, critical } }

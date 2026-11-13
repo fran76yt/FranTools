@@ -34,6 +34,9 @@ ponen antes de empezar (la armadura del brujo) avisan siempre de entrada
 (def.anytime); el jugador puede cambiar cualquiera de los dos. No avisa muerto ni de lo que aún
 no has aprendido: si no sabes usar ninguno de los que valen, no hay aviso.
 
+En combate el juego puede ocultar los beneficios a los addons (ver
+Core/Buffs.lua): entonces se usa el último que se pudo leer.
+
 Cada aviso creado tiene IsEnabled/SetEnabled/Toggle, IsCombatOnly/
 SetCombatOnly, IsChosen/SetChosen, Check y su lista en .list.
 ]]
@@ -119,12 +122,14 @@ function methods.ShouldCheck(w)
         and (not w.IsCombatOnly() or Util.InCombat())
 end
 
--- Icono, texto y nivel del aviso, o nil si no hay nada que avisar.
+-- Icono, texto y nivel del aviso, o nil si no hay nada que avisar. El
+-- beneficio se lee aunque no toque avisar, para recordarlo de cara al combate.
 function methods.Notice(w)
+    if not w.def.classes[Api.PlayerClass()] then return nil end
+    local active = w.buffs:Current()
     if not w.ShouldCheck() then return nil end
     local wanted = w.Wanted()
     if #wanted == 0 then return nil end
-    local active = w.buffs:Active()
     if active and w.IsChosen(active) then return nil end
     local icon = Api.SpellIcon(wanted[1].spells[1])
     if active then return icon, w.def.wrong:format(active.label), "critical" end

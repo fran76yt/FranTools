@@ -18,9 +18,10 @@ Los enemigos con los que no estáis en combate ni tú ni tu mascota no llevan
 nada. Para cualquier clase; se apaga en la página General de /fran config o
 con /fran agro.
 
-Sin verificar en Forever: que su cliente dé la amenaza (si no, no se ve nada)
-y que sus barras de nombre sean las de Blizzard (con otro addon de barras de
-nombre el marco rodea la barra entera, o no se ve).
+El cliente de Forever es el moderno, que en combate puede ocultar la amenaza
+a los addons ("valor secreto", ver Core/Api.lua). Si pasa, no hay nada que
+pintar: se quitan los marcos y se explica una vez por sesión en el chat, en
+lugar de dar un error de Lua cada vez.
 ]]
 
 local _, ns = ...
@@ -48,10 +49,23 @@ local function percentText(player)
     return ("%d%%"):format(math.floor(player.percent + 0.5))
 end
 
+local secretNoticeShown = false
+
+local function onSecretThreat()
+    if secretNoticeShown then return end
+    secretNoticeShown = true
+    Util.Print("este cliente no deja a los addons leer la amenaza en combate, así que el agro en las barras de nombre no puede funcionar aquí. /fran agro para apagarlo.")
+end
+
 -- Color y texto para la barra de unit, o nil si no lleva nada.
 local function display(unit)
     if not Threat.IsEnabled() or not Api.CanAttack(unit) then return nil end
-    local player, pet = Api.Threat("player", unit), Api.Threat("pet", unit)
+    local player, playerSecret = Api.Threat("player", unit)
+    local pet, petSecret = Api.Threat("pet", unit)
+    if playerSecret or petSecret then
+        onSecretThreat()
+        return nil
+    end
     if not player and not pet then return nil end
     return C.COLOR[situation(player, pet)], percentText(player)
 end
@@ -110,7 +124,8 @@ local function yesNo(value)
     return value and "sí" or "no"
 end
 
-local function threatText(t)
+local function threatText(t, secret)
+    if secret then return "oculta por el juego (valor secreto): el addon no puede leerla" end
     if not t then return "nada (no estáis en combate)" end
     return ("tanqueando %s, situación %s, %s%%"):format(yesNo(t.tanking), tostring(t.status), tostring(t.percent))
 end

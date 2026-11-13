@@ -169,7 +169,9 @@ Otro recuadro discreto, como el de la munición, para no pelear sin aspecto o co
 - **Arrástralo** a donde te moleste menos; la posición se guarda por personaje.
 - Se apaga o enciende con la primera casilla de **Cazador › Aspectos**, o con `/fran aspecto`.
 
-Los IDs de todos los rangos están en `Const.ASPECT` ([`Core/Constants.lua`](Core/Constants.lua)), comprobados en Wowhead Forever. Sin verificar en Forever: que su cliente dé las auras con `C_UnitAuras` (si no, se usa `UnitBuff`).
+Los IDs de todos los rangos están en `Const.ASPECT` ([`Core/Constants.lua`](Core/Constants.lua)), comprobados en Wowhead Forever.
+
+**En combate**, el cliente de Forever oculta a los addons la lista de beneficios (comprobado en el juego: es un «valor secreto» y pedirla da un error). Entonces el addon pregunta hechizo a hechizo, por si eso sí lo deja, y si tampoco, usa lo último que leyó antes de empezar la pelea. Así, si entras en combate sin el beneficio, el aviso sigue saliendo; lo que no puede saber es si se te cae a mitad de pelea. Vale para todos los avisos de beneficios: aspecto, Grito de guerra, armadura, aura, bendición y Furia justa.
 
 ### Guerrero: Grito de guerra
 
@@ -221,7 +223,7 @@ Para cualquier clase. En la barra de nombre de cada enemigo con el que estáis e
 - El marco va por encima de la barra de vida, para que su propio borde no lo tape. Sirve con las barras de nombre de los clientes clásicos y de los modernos (la barra de vida está en sitios distintos).
 - **Si no se ve:** selecciona un enemigo con el que estés en combate y escribe `/fran agro estado`. Dice, paso a paso, si el aviso está encendido, si el juego da la amenaza, si el objetivo tiene barra de nombre y barra de vida, qué amenaza tenéis tú y la mascota, y si el marco está puesto.
 
-Sin verificar en Forever: que su cliente dé la amenaza (`UnitDetailedThreatSituation`; si no, no se ve nada) y que sus barras de nombre sean las de Blizzard. Con otro addon que las sustituya, el marco rodea la barra entera o no se ve.
+**En Forever no funciona** (comprobado en el juego): su cliente oculta la amenaza a los addons en combate, que es justo cuando la hay (llega como «valor secreto», que no se puede leer). El addon lo detecta, no pinta nada y lo explica una vez por sesión en el chat; `/fran agro estado` lo dice también. Se queda en el addon por si en otro cliente sí la da, y se apaga con `/fran agro`.
 
 ---
 
@@ -287,6 +289,8 @@ Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que los
 ### Registro de errores
 
 Si el addon da un error de Lua, queda apuntado aunque el juego tenga apagada la ventana de errores (lo normal). La primera vez en cada sesión sale un aviso en el chat.
+
+Los errores se escriben en un archivo de texto, `WTF\Account\<CUENTA>\SavedVariables\FranTools.lua` (la variable `FranToolsLog`), que se puede abrir con cualquier editor o pasar a quien lo vaya a revisar. Un addon no puede escribir archivos cuando quiere: el juego guarda ese archivo al hacer `/reload`, al cerrar sesión o al salir. Si el juego se cierra de golpe, se pierde lo de esa sesión, así que tras un error conviene hacer `/reload`.
 
 | Comando | Qué hace |
 |---|---|

@@ -60,9 +60,12 @@ local function applies()
 end
 
 -- Texto y nivel del aviso, o nil si está como toca.
+-- Si la lleva se lee aunque no toque avisar, para recordarlo de cara al
+-- combate (en combate el juego puede ocultarla: ver Core/Buffs.lua).
 local function notice()
+    if Api.PlayerClass() ~= "PALADIN" then return nil end
+    local wearing = fury:Current() ~= nil
     if not applies() then return nil end
-    local wearing = fury:Active() ~= nil
     local tank = RighteousFury.IsTank()
     if tank and not wearing then return "Sin Furia justa", "warning" end
     if wearing and not tank then return "Furia justa: quítala", "critical" end

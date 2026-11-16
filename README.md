@@ -276,7 +276,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 
 ## Código compartido con otros addons
 
-[StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW) y [FranFundir](https://github.com/fran76yt/FranFundir) usan las mismas piezas genéricas que este: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua) y [`UI/Tooltip.lua`](UI/Tooltip.lua); además, StreamDeckWoW usa [`UI/MinimapButton.lua`](UI/MinimapButton.lua) y FranFundir [`UI/Checkbox.lua`](UI/Checkbox.lua). También comparten cómo se montan las [pruebas](#pruebas): `tests/run.js`, `tests/api_stubs.lua` y `tests/package.json`. Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin los otros.
+[StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW) y [FranFundir](https://github.com/fran76yt/FranFundir) usan las mismas piezas genéricas que este: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua) y [`UI/Tooltip.lua`](UI/Tooltip.lua); además, los dos usan [`UI/MinimapButton.lua`](UI/MinimapButton.lua) y FranFundir, [`UI/Checkbox.lua`](UI/Checkbox.lua). También comparten cómo se montan las [pruebas](#pruebas): `tests/run.js`, `tests/api_stubs.lua` y `tests/package.json`. Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin los otros.
 
 El original está aquí. Con los otros addons en la misma carpeta `AddOns` (la lista de qué recibe cada uno está en el script):
 

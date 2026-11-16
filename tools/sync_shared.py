@@ -39,7 +39,7 @@ CORE = [
 # Addon de destino -> archivos que recibe.
 TARGETS = {
     "StreamDeckWoW": CORE + ["UI/MinimapButton.lua"],
-    "FranFundir": CORE + ["UI/Checkbox.lua"],
+    "FranFundir": CORE + ["UI/Checkbox.lua", "UI/MinimapButton.lua"],
 }
 
 SOURCE = Path(__file__).resolve().parent.parent

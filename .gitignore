@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 
+# Pruebas: dependencias de Node (npm install en tests/) y SavedVariables
+# simuladas que escribe cada ejecución
+tests/node_modules/
+tests/out/
+
 # Archivos del sistema
 Thumbs.db
 desktop.ini

@@ -21,7 +21,7 @@ Addon de **World of Warcraft: Forever** con pequeñas ayudas para el día a día
 
 Todo se configura dentro del juego, en una ventana con una página por tema, y cada función se puede apagar.
 
-Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el addon que conecta el juego con una Stream Deck, y se separó porque nada de esto necesita una. Los dos addons funcionan por separado y comparten parte del código (ver [Código compartido](#código-compartido-con-streamdeckwow)).
+Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el addon que conecta el juego con una Stream Deck, y se separó porque nada de esto necesita una. Los dos addons funcionan por separado y comparten parte del código (ver [Código compartido](#código-compartido-con-otros-addons)).
 
 > **Estado:** versión **0.1.0**, en pruebas. Cada función tiene pruebas automáticas sobre una API del juego simulada, pero aún no se ha probado dentro del juego.
 
@@ -32,10 +32,11 @@ Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el 
 1. [Instalación](#instalación)
 2. [Uso](#uso)
 3. [El addon por dentro](#el-addon-por-dentro)
-4. [Código compartido con StreamDeckWoW](#código-compartido-con-streamdeckwow)
+4. [Código compartido con otros addons](#código-compartido-con-otros-addons)
 5. [Datos guardados](#datos-guardados)
 6. [Añadir opciones de una clase](#añadir-opciones-de-una-clase)
-7. [Estructura del proyecto](#estructura-del-proyecto)
+7. [Pruebas](#pruebas)
+8. [Estructura del proyecto](#estructura-del-proyecto)
 
 ---
 
@@ -235,7 +236,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 |---|---|
 | [`Core/Constants.lua`](Core/Constants.lua) | Todos los valores fijos: IDs de hechizos, umbrales, tiempos, colores y medidas |
 | [`Core/Util.lua`](Core/Util.lua) | *Compartido.* Utilidades genéricas: llamadas protegidas (`Util.SafeCall`, el *try/catch* de Lua: cada función de un evento se ejecuta aparte, y si falla no corta las demás), eventos, mensajes entre módulos, temporizadores y *debounce*, ejecutar fuera de combate, interruptores de opciones (`Util.Switch`), guardar solo lo que difiere del valor por defecto (`Util.SetOverride`), escribir en el chat |
-| [`Core/Api.lua`](Core/Api.lua) | *Compartido.* Única puerta a la API del juego: hechizos, objetos, bolsas, mascota, auras, amenaza y barras de nombre, vendedores y dinero, tipo de instancia, avisos en pantalla. Si a un cliente le falta una función, devuelve vacío en lugar de dar un error de Lua |
+| [`Core/Api.lua`](Core/Api.lua) | *Compartido.* Única puerta a la API del juego: hechizos, objetos y sus tooltips, recetas de la profesión abierta, bolsas, mascota, auras, amenaza y barras de nombre, vendedores y dinero, tipo de instancia, avisos en pantalla. Si a un cliente le falta una función, devuelve vacío en lugar de dar un error de Lua |
 | [`Core/ErrorLog.lua`](Core/ErrorLog.lua) | *Compartido.* Registro de errores: se pone delante del manejador de errores del juego, apunta los de este addon en una variable de la cuenta (sin repetir, con contador y como mucho 50) y los muestra con `/fran errores` |
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
@@ -273,18 +274,18 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 
 ---
 
-## Código compartido con StreamDeckWoW
+## Código compartido con otros addons
 
-Los dos addons usan las mismas piezas genéricas: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua), [`UI/Tooltip.lua`](UI/Tooltip.lua) y [`UI/MinimapButton.lua`](UI/MinimapButton.lua). Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin el otro.
+[StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW) y [FranFundir](https://github.com/fran76yt/FranFundir) usan las mismas piezas genéricas que este: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua) y [`UI/Tooltip.lua`](UI/Tooltip.lua); además, StreamDeckWoW usa [`UI/MinimapButton.lua`](UI/MinimapButton.lua) y FranFundir [`UI/Checkbox.lua`](UI/Checkbox.lua). También comparten cómo se montan las [pruebas](#pruebas): `tests/run.js`, `tests/api_stubs.lua` y `tests/package.json`. Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin los otros.
 
-El original está aquí. Con StreamDeckWoW en la misma carpeta `AddOns`:
+El original está aquí. Con los otros addons en la misma carpeta `AddOns` (la lista de qué recibe cada uno está en el script):
 
 ```bash
-python tools/sync_shared.py           # copia los archivos compartidos a StreamDeckWoW
+python tools/sync_shared.py           # copia los archivos compartidos a los otros addons
 python tools/sync_shared.py --check   # solo comprueba que son iguales
 ```
 
-Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que los dos addons definen (están en su cabecera): `ADDON_NAME`, `ICON`, `MSG.SETTINGS_CHANGED`, `CHAT_PREFIX`, `UI.TOOLTIP_HELP_COLOR`, `MINIMAP` y `ERROR_LOG`.
+Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que todos los addons definen (están en su cabecera): `ADDON_NAME`, `ICON`, `MSG.SETTINGS_CHANGED`, `CHAT_PREFIX`, `UI.TOOLTIP_HELP_COLOR`, `MINIMAP` y `ERROR_LOG`.
 
 ### Registro de errores
 
@@ -380,6 +381,28 @@ Los IDs de hechizos y objetos de Forever se consultan en [Wowhead (Forever)](htt
 
 ---
 
+## Pruebas
+
+El addon se puede probar sin abrir el juego: [`tests/run.js`](tests/run.js) carga sus archivos en el orden del `.toc`, como hace WoW, sobre una API del juego simulada en Lua, y ejecuta las pruebas de [`tests/test.lua`](tests/test.lua): avisos de cada clase, opciones, comandos, agro, registro de errores, lo que se guarda… Hace falta [Node.js](https://nodejs.org/).
+
+```bash
+cd tests
+npm install   # la primera vez: instala fengari, un Lua escrito en JavaScript
+npm test
+```
+
+Cada comprobación que pasa escribe `ok` y la primera que falla para con un error (y el comando sale con código 1). Las SavedVariables que quedarían se escriben en `tests/out/FranTools.lua`, para revisarlas.
+
+| Archivo | Qué es |
+|---|---|
+| [`tests/test.lua`](tests/test.lua) | Las pruebas de este addon |
+| [`tests/api_stubs.lua`](tests/api_stubs.lua) | *Compartido.* La API de WoW simulada: frames que apuntan lo que se les hace, eventos, temporizadores y el estado del personaje (hechizos, bolsas, combate, auras…) en variables que las pruebas cambian |
+| [`tests/run.js`](tests/run.js) | *Compartido.* Carga la API simulada, el addon y las pruebas |
+
+Las simulaciones que solo usa un addon (por ejemplo TradeSkillMaster, en FranFundir) van en su propio `tests/stubs.lua`. Ojo: aquí corre Lua 5.3 y WoW usa Lua 5.1, así que lo que cambia entre ambos (como los números enteros y decimales) no queda probado. Nada sustituye a probarlo en el juego.
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -426,6 +449,11 @@ FranTools/
 │   ├── ConfigWindow.lua               ventana /fran config
 │   ├── MinimapButton.lua              componente de botón del minimapa (compartido)
 │   └── Minimap.lua                    el botón del minimapa de este addon
+├── tests/
+│   ├── test.lua                       las pruebas
+│   ├── api_stubs.lua                  API de WoW simulada (compartido)
+│   ├── run.js                         carga el addon y ejecuta las pruebas (compartido)
+│   └── package.json                   dependencia: fengari (compartido)
 └── tools/
-    └── sync_shared.py                 copia el código compartido a StreamDeckWoW
+    └── sync_shared.py                 copia el código compartido a los otros addons
 ```

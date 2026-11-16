@@ -644,6 +644,11 @@ printed = {}
 fire("PRUEBA_ERROR")
 check(after, "un error en una función de un evento no impide las demás")
 check(ownErrors() == 1, "el error sigue llegando al manejador de antes")
+local heard = false
+check(ns.Util.OnIfExists("TRADE_SKILL_UPDATE", function() heard = true end) == false, "un evento que el cliente no tiene no se registra, sin error")
+check(ns.Util.OnIfExists("PRUEBA_EXISTE", function() heard = true end) == true, "uno que sí tiene, se registra")
+fire("PRUEBA_EXISTE")
+check(heard, "y se escucha")
 check(#Log.Entries() == base + 1 and Log.Entries()[base + 1].stack:find("Prueba.lua:7", 1, true), "se apunta con su pila")
 check(not Log.Entries()[base + 1].stack:find("ErrorLog.lua", 1, true), "sin las líneas del propio registro")
 fire("PRUEBA_ERROR")

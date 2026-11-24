@@ -2,6 +2,9 @@
 Casilla de verificación
 =======================
 
+Parte de FranLib (ver Config.lua): se edita en el repositorio FranLib y se
+copia a cada addon con su tools/sync.py.
+
 Componente reutilizable: una casilla con texto a la derecha y tooltip, que
 lee su estado de una función y lo escribe en otra. No guarda nada por sí
 misma; así la verdad está siempre en el módulo que la usa y la casilla solo
@@ -19,7 +22,7 @@ la refleja.
 ]]
 
 local _, ns = ...
-local UI, Util = ns.Const.UI, ns.Util
+local CHECK, Util = ns.FranLib.Const.CHECK, ns.Util
 
 local Checkbox = {}
 ns.Checkbox = Checkbox
@@ -42,7 +45,7 @@ local function labelText(opts)
     local icon = opts.icon
     if type(icon) == "function" then icon = icon() end
     if not icon then return opts.label end
-    return Util.IconText(icon, UI.CHECK_ICON_SIZE) .. " " .. opts.label
+    return Util.IconText(icon, CHECK.ICON_SIZE) .. " " .. opts.label
 end
 
 -- La plantilla de Blizzard trae su propio texto (.Text) en el cliente moderno;
@@ -51,14 +54,14 @@ local function setLabel(cb, text)
     local label = cb.Text
     if not label then
         label = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        label:SetPoint("LEFT", cb, "RIGHT", UI.CHECK_LABEL_GAP, 0)
+        label:SetPoint("LEFT", cb, "RIGHT", CHECK.LABEL_GAP, 0)
     end
     label:SetText(text)
 end
 
 function Checkbox.Create(parent, opts)
     local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    cb:SetSize(UI.CHECK_SIZE, UI.CHECK_SIZE)
+    cb:SetSize(CHECK.SIZE, CHECK.SIZE)
     cb.opts = opts
     for name, fn in pairs(methods) do cb[name] = fn end
     setLabel(cb, labelText(opts))

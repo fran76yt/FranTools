@@ -230,7 +230,7 @@ local function relayoutAll()
         if box.frame then applyLayout(box.frame) end
     end
     restack()
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+    Util.Fire(Util.SETTINGS_CHANGED)
 end
 
 function NoticeBox.SetIconOnly(on)

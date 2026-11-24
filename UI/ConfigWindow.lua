@@ -145,4 +145,4 @@ function ConfigWindow.Toggle()
 end
 
 -- Una opción cambiada con un comando (/fran aviso...) se ve en su casilla.
-Util.Listen(Const.MSG.SETTINGS_CHANGED, refresh)
+Util.Listen(Util.SETTINGS_CHANGED, refresh)

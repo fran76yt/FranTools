@@ -12,9 +12,10 @@ y una tabla privada que comparten todos sus archivos. Usamos esa tabla (ns,
 "namespace") para repartir el código en módulos sin crear variables globales,
 que podrían chocar con otros addons.
 
-Los archivos compartidos con StreamDeckWoW (ver tools/sync_shared.py) leen de
-aquí ADDON_NAME, ICON, MSG.SETTINGS_CHANGED, CHAT_PREFIX, UI.TOOLTIP_HELP_COLOR,
-MINIMAP y ERROR_LOG: los dos addons tienen que definirlos.
+El código común con los otros addons (utilidades, API del juego, registro
+de errores, tooltips, casillas y botón del minimapa) está en la librería
+FranLib, incrustada en Libs/FranLib. Lo que necesita saber de este addon se
+lo dice ns.FranLibConfig, al final de este archivo.
 ]]
 
 local addonName, ns = ...
@@ -30,11 +31,6 @@ ns.Const = Const
 -- juego, para no tener que dibujar y mantener uno.
 Const.ADDON_NAME = addonName
 Const.ICON = "Interface\\Icons\\INV_Misc_Wrench_01"
-
--- Mensajes internos entre módulos (no son eventos de WoW).
-Const.MSG = {
-    SETTINGS_CHANGED = "SETTINGS_CHANGED",   -- ha cambiado una opción (aviso del taunt...)
-}
 
 -- Chat: prefijo de los mensajes (icono + nombre).
 -- |T ruta:alto:ancho|t inserta una imagen en el texto del chat.
@@ -62,11 +58,8 @@ Const.UI = {
     SECTION_GAP = 8,               -- espacio extra sobre un título que no es el primero
     NOTE_MARGIN = 6,               -- espacio sobre y bajo una nota (las de varias líneas
                                    -- ocupan lo que mida su texto)
-    CHECK_SIZE = 24,
-    CHECK_LABEL_GAP = 2,           -- separación entre la casilla y su texto
     CHECK_COLUMN_WIDTH = 110,      -- ancho de cada casilla en las filas de varias
     CHECKS_PER_ROW = 3,
-    CHECK_ICON_SIZE = 16,          -- icono delante del texto de una casilla
     -- Cajas numéricas, en columnas: x de la izquierda de cada columna.
     NUMBER_BOX_WIDTH = 44,
     NUMBER_BOX_HEIGHT = 20,
@@ -102,8 +95,6 @@ Const.UI = {
         TOGGLE_SIZE = 14,
         TOGGLE_RIGHT = -6,
     },
-    -- Color de las líneas de ayuda del tooltip (RGB 0-1).
-    TOOLTIP_HELP_COLOR = { 0.8, 0.8, 0.8 },
 }
 
 -- Aviso del taunt de la mascota (Features/PetTaunt.lua). En mazmorras y bandas
@@ -273,6 +264,18 @@ Const.MERCHANT = {
     SELL_INTERVAL = 0.2,
 }
 
+-- Registro de combate (Features/CombatLog.lua): el juego escribe todo lo que
+-- pasa en combate en Logs\WoWCombatLog-<fecha>.txt, que luego se puede
+-- analizar fuera del juego. Se enciende solo en estos tipos de instancia
+-- (los de IsInInstance) y se apaga al salir de ellas, para que el archivo no
+-- se llene con el mundo abierto. CHECK_DELAY da tiempo a que el cliente sepa
+-- dónde está tras una pantalla de carga.
+Const.COMBAT_LOG = {
+    INSTANCE_TYPES = { party = true, raid = true },
+    FILE_HINT = "Logs\\WoWCombatLog-<fecha>.txt",
+    CHECK_DELAY = 1,
+}
+
 -- Agro en las barras de nombre de los enemigos (Features/Threat.lua y
 -- UI/ThreatBadge.lua): un marco de color alrededor de la barra de vida y tu
 -- porcentaje de amenaza al lado. Colores RGB 0-1 por situación:
@@ -335,32 +338,12 @@ Const.NOTICE = {
     DIM_ALPHA = 0.6,                        -- icono de algo que aún no se puede usar
 }
 
--- Registro de errores de Lua (Core/ErrorLog.lua, compartido).
-Const.ERROR_LOG = {
-    SAVED_VAR = "FranToolsLog",       -- variable de la cuenta (## SavedVariables del .toc)
-    COMMAND = "/fran errores",       -- para el aviso del chat y la ayuda
-    MAX_ENTRIES = 50,                  -- errores distintos que se guardan como mucho
-    MAX_STACK_CHARS = 2000,            -- tope de la pila de cada uno, para no inflar el archivo
-    STACK_COLOR = "999999",            -- gris para la pila en el chat
-}
-
--- Botón del minimapa. Las medidas y texturas son las del aro estándar que usan
--- los botones de minimapa de casi todos los addons, para que no desentone.
--- Las posiciones son píxeles desde la esquina superior izquierda del botón.
-Const.MINIMAP = {
-    BUTTON_NAME = "FranToolsMinimapButton",   -- nombre global (otros addons de minimapa lo reconocen)
-    DEFAULT_ANGLE = 225,     -- grados desde la derecha, en sentido antihorario: abajo a la izquierda
-    EDGE_OFFSET = 5,         -- cuánto sobresale el botón del borde del minimapa
-    FRAME_LEVEL = 8,         -- por encima de los iconos del propio minimapa
-    SIZE = 31,
-    BORDER_SIZE = 53,
-    BORDER_TEXTURE = "Interface\\Minimap\\MiniMap-TrackingBorder",
-    BACKGROUND_SIZE = 20,
-    BACKGROUND_OFFSET = { 7, -5 },
-    BACKGROUND_TEXTURE = "Interface\\Minimap\\UI-Minimap-Background",
-    ICON_SIZE = 17,
-    ICON_OFFSET = { 7, -6 },
-    -- Máscara circular para que el icono (cuadrado) encaje en el aro.
-    ICON_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask",
-    HIGHLIGHT_TEXTURE = "Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight",
+-- Lo que FranLib (Libs/FranLib, ver su Config.lua) necesita saber de este
+-- addon: con qué icono y prefijo habla en el chat, dónde apunta sus errores y
+-- cómo se llama su botón del minimapa.
+ns.FranLibConfig = {
+    icon = Const.ICON,
+    chatPrefix = Const.CHAT_PREFIX,
+    errorLog = { savedVar = "FranToolsLog", command = "/fran errores" },
+    minimap = { buttonName = "FranToolsMinimapButton", defaultAngle = 225 },
 }

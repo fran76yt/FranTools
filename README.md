@@ -21,7 +21,7 @@ Addon de **World of Warcraft: Forever** con pequeñas ayudas para el día a día
 
 Todo se configura dentro del juego, en una ventana con una página por tema, y cada función se puede apagar.
 
-Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el addon que conecta el juego con una Stream Deck, y se separó porque nada de esto necesita una. Los dos addons funcionan por separado y comparten parte del código (ver [Código compartido](#código-compartido-con-otros-addons)).
+Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el addon que conecta el juego con una Stream Deck, y se separó porque nada de esto necesita una. Los dos addons funcionan por separado y comparten parte del código (ver [Librería común](#librería-común-franlib)).
 
 > **Estado:** versión **0.1.0**, en pruebas. Cada función tiene pruebas automáticas sobre una API del juego simulada, pero aún no se ha probado dentro del juego.
 
@@ -32,7 +32,7 @@ Nació dentro de [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW), el 
 1. [Instalación](#instalación)
 2. [Uso](#uso)
 3. [El addon por dentro](#el-addon-por-dentro)
-4. [Código compartido con otros addons](#código-compartido-con-otros-addons)
+4. [Librería común (FranLib)](#librería-común-franlib)
 5. [Datos guardados](#datos-guardados)
 6. [Añadir opciones de una clase](#añadir-opciones-de-una-clase)
 7. [Pruebas](#pruebas)
@@ -68,6 +68,7 @@ El nombre de la carpeta tiene que coincidir con el del `.toc`. En la pantalla de
 | `/fran reparar` | Apaga o enciende reparar al abrir un vendedor |
 | `/fran basura` | Apaga o enciende vender la basura al abrir un vendedor |
 | `/fran agro` | Apaga o enciende el agro en las barras de nombre |
+| `/fran registro` | Apaga o enciende el registro de combate en mazmorras y bandas |
 | `/fran agro estado` | Con un enemigo seleccionado, repasa paso a paso por qué se ve o no el agro (ver [Agro en las barras de nombre](#agro-en-las-barras-de-nombre)) |
 | `/fran grito` | Guerrero: apaga o enciende el aviso de Grito de guerra |
 | `/fran revancha` | Guerrero: apaga o enciende el aviso de Revancha |
@@ -249,6 +250,15 @@ Si un cliente no dejara ni eso, el addon quita el marco y lo explica una vez por
 
 Sin addons, el juego también enseña tu porcentaje de amenaza en el marco del objetivo si activas la opción de amenaza numérica de la interfaz (variable `threatShowNumeric`).
 
+### Registro de combate
+
+Al entrar en una mazmorra o banda, el addon hace lo mismo que escribir `/combatlog`: el juego guarda todo el combate (lanzamientos, auras, daño, muertes) en `Logs\WoWCombatLog-<fecha>.txt`, dentro de la carpeta `_forever_`. Ese archivo sirve para analizar las peleas fuera del juego, porque Forever no deja a los addons leer el registro de combate.
+
+- Al salir de la instancia lo apaga, pero solo si lo encendió el addon: si lo pusiste tú a mano, lo deja como está.
+- Para que el archivo traiga todos los datos, activa también **Registro de combate avanzado** en las opciones del juego (Sistema → Red).
+- Se apaga o enciende en **General** de `/fran config`, o con `/fran registro`. Viene encendido.
+- Si algún día el juego no dejara a los addons encenderlo, lo dice en el chat y hay que escribir `/combatlog` a mano.
+
 ---
 
 ## El addon por dentro
@@ -258,9 +268,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | Archivo | Responsabilidad |
 |---|---|
 | [`Core/Constants.lua`](Core/Constants.lua) | Todos los valores fijos: IDs de hechizos, umbrales, tiempos, colores y medidas |
-| [`Core/Util.lua`](Core/Util.lua) | *Compartido.* Utilidades genéricas: llamadas protegidas (`Util.SafeCall`, el *try/catch* de Lua: cada función de un evento se ejecuta aparte, y si falla no corta las demás), eventos, mensajes entre módulos, temporizadores y *debounce*, ejecutar fuera de combate, interruptores de opciones (`Util.Switch`), guardar solo lo que difiere del valor por defecto (`Util.SetOverride`), escribir en el chat |
-| [`Core/Api.lua`](Core/Api.lua) | *Compartido.* Única puerta a la API del juego: hechizos, objetos y sus tooltips, recetas de la profesión abierta, bolsas, mascota, auras, amenaza y barras de nombre, vendedores y dinero, tipo de instancia, avisos en pantalla. Si a un cliente le falta una función, devuelve vacío en lugar de dar un error de Lua |
-| [`Core/ErrorLog.lua`](Core/ErrorLog.lua) | *Compartido.* Registro de errores: se pone delante del manejador de errores del juego, apunta los de este addon en una variable de la cuenta (sin repetir, con contador y como mucho 50) y los muestra con `/fran errores` |
+| [`Libs/FranLib/`](Libs/FranLib) | *Librería común FranLib, incrustada (es una copia: se edita en el repositorio FranLib).* Utilidades (llamadas protegidas con `Util.SafeCall`, eventos, mensajes entre módulos, interruptores de opciones, chat), la única puerta a la API del juego, el registro de errores (`/fran errores`), tooltips de ayuda, casillas y el botón del minimapa |
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
 | [`Core/Role.lua`](Core/Role.lua) | Quién tanquea: el rol del grupo o la casilla Tanqueo yo, la misma para todas las clases |
@@ -278,11 +286,10 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`Features/Paladin.lua`](Features/Paladin.lua) | Avisos de aura y bendición |
 | [`Features/RighteousFury.lua`](Features/RighteousFury.lua) | Aviso de Furia justa, según si tanqueas |
 | [`Features/Merchant.lua`](Features/Merchant.lua) | Al abrir un vendedor: vende la basura en tandas y después repara |
+| [`Features/CombatLog.lua`](Features/CombatLog.lua) | Registro de combate: lo enciende al entrar en una mazmorra o banda y lo apaga al salir, si lo encendió él |
 | [`Features/Threat.lua`](Features/Threat.lua) | Agro en las barras de nombre: decide el color y el porcentaje de cada enemigo, o se los pasa sin mirar al marco si el juego los oculta |
-| [`UI/Tooltip.lua`](UI/Tooltip.lua) | *Compartido.* Tooltips de ayuda (título y líneas en gris) |
 | [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda; los no movidos se apilan. Modo solo icono, tamaño del icono y una cifra encima (cuenta atrás) |
 | [`UI/ThreatBadge.lua`](UI/ThreatBadge.lua) | Marco de color y texto alrededor de la barra de vida de una barra de nombre, sin tocar la barra |
-| [`UI/Checkbox.lua`](UI/Checkbox.lua) | Casilla: lee y escribe su estado con funciones del módulo que la usa |
 | [`UI/NumberBox.lua`](UI/NumberBox.lua) | Caja numérica: aplica con Intro o al salir, descarta con Escape |
 | [`UI/OptionsPage.lua`](UI/OptionsPage.lua) | Dibuja una página de opciones a partir de filas descritas como datos |
 | [`UI/OptionRows.lua`](UI/OptionRows.lua) | Filas que se repiten en varias clases: encender el aviso, solo en combate, elegir los que valen, umbrales, taunt de la mascota |
@@ -294,24 +301,18 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`UI/ClassPages/Warlock.lua`](UI/ClassPages/Warlock.lua) | Sección **Brujo**: páginas Mascota, Reactivos y Armadura |
 | [`UI/ClassPages/Paladin.lua`](UI/ClassPages/Paladin.lua) | Sección **Paladín**: páginas Aura, Bendición y Furia justa |
 | [`UI/ConfigWindow.lua`](UI/ConfigWindow.lua) | La ventana `/fran config` |
-| [`UI/MinimapButton.lua`](UI/MinimapButton.lua) | *Compartido.* Componente de botón del minimapa, hecho a mano sin LibDBIcon |
 | [`UI/Minimap.lua`](UI/Minimap.lua) | El botón del minimapa de este addon |
 | [`Core/Commands.lua`](Core/Commands.lua) | Comandos `/fran` |
 
 ---
 
-## Código compartido con otros addons
+## Librería común (FranLib)
 
-[StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW) y [FranFundir](https://github.com/fran76yt/FranFundir) usan las mismas piezas genéricas que este: [`Core/Util.lua`](Core/Util.lua), [`Core/Api.lua`](Core/Api.lua), [`Core/ErrorLog.lua`](Core/ErrorLog.lua) y [`UI/Tooltip.lua`](UI/Tooltip.lua); además, los dos usan [`UI/MinimapButton.lua`](UI/MinimapButton.lua) y FranFundir, [`UI/Checkbox.lua`](UI/Checkbox.lua). También comparten cómo se montan las [pruebas](#pruebas): `tests/run.js`, `tests/api_stubs.lua` y `tests/package.json`. Un addon de WoW no puede cargar archivos de otro sin depender de él, así que cada uno lleva su copia, como se hace con las librerías de addons. Así cada addon funciona sin los otros.
+FranTools, [StreamDeckWoW](https://github.com/fran76yt/StreamDeckWoW) y [FranFundir](https://github.com/fran76yt/FranFundir) usan las mismas piezas genéricas: utilidades, el acceso a la API del juego, el registro de errores, tooltips, casillas y el botón del minimapa. Están en la librería **FranLib**, que va incrustada en [`Libs/FranLib/`](Libs/FranLib), como se hace con Ace3 y el resto de librerías de WoW: cada addon lleva su copia y funciona solo, sin instalar nada más. También es de FranLib el montaje de las [pruebas](#pruebas): `tests/run.js`, `tests/api_stubs.lua` y `tests/package.json`.
 
-El original está aquí. Con los otros addons en la misma carpeta `AddOns` (la lista de qué recibe cada uno está en el script):
+La carpeta `Libs/FranLib/` no se edita aquí: el original está en el repositorio FranLib, con sus propias pruebas, y se copia a los addons con su `tools/sync.py` (`--check` solo comprueba que todo coincide).
 
-```bash
-python tools/sync_shared.py           # copia los archivos compartidos a los otros addons
-python tools/sync_shared.py --check   # solo comprueba que son iguales
-```
-
-Los archivos compartidos leen de `Core/Constants.lua` algunas constantes que todos los addons definen (están en su cabecera): `ADDON_NAME`, `ICON`, `MSG.SETTINGS_CHANGED`, `CHAT_PREFIX`, `UI.TOOLTIP_HELP_COLOR`, `MINIMAP` y `ERROR_LOG`.
+Lo que la librería necesita saber de este addon (icono, prefijo del chat, variable y comando del registro de errores, nombre del botón del minimapa) está en `ns.FranLibConfig`, al final de [`Core/Constants.lua`](Core/Constants.lua).
 
 ### Registro de errores
 
@@ -358,6 +359,7 @@ FranToolsChar = {
     ["repair"] = { ["off"] = true },
     ["junk"] = { ["off"] = true },
     ["threat"] = { ["off"] = true },
+    ["combatLog"] = { ["startedByUs"] = true },   -- el registro que corre lo encendió el addon
     ["shards"] = { ["thresholds"] = { ["count"] = { ["low"] = 8 } } },
     ["aura"] = { ["chosen"] = { ["retribution"] = false } },
     ["role"] = { ["tank"] = true },               -- casilla Tanqueo yo
@@ -424,8 +426,8 @@ Cada comprobación que pasa escribe `ok` y la primera que falla para con un erro
 | Archivo | Qué es |
 |---|---|
 | [`tests/test.lua`](tests/test.lua) | Las pruebas de este addon |
-| [`tests/api_stubs.lua`](tests/api_stubs.lua) | *Compartido.* La API de WoW simulada: frames que apuntan lo que se les hace, eventos, temporizadores y el estado del personaje (hechizos, bolsas, combate, auras…) en variables que las pruebas cambian |
-| [`tests/run.js`](tests/run.js) | *Compartido.* Carga la API simulada, el addon y las pruebas |
+| [`tests/api_stubs.lua`](tests/api_stubs.lua) | *De FranLib.* La API de WoW simulada: frames que apuntan lo que se les hace, eventos, temporizadores y el estado del personaje (hechizos, bolsas, combate, auras…) en variables que las pruebas cambian |
+| [`tests/run.js`](tests/run.js) | *De FranLib.* Carga la API simulada, el addon y las pruebas |
 
 Las simulaciones que solo usa un addon (por ejemplo TradeSkillMaster, en FranFundir) van en su propio `tests/stubs.lua`. Ojo: aquí corre Lua 5.3 y WoW usa Lua 5.1, así que lo que cambia entre ambos (como los números enteros y decimales) no queda probado. Nada sustituye a probarlo en el juego.
 
@@ -436,11 +438,9 @@ Las simulaciones que solo usa un addon (por ejemplo TradeSkillMaster, en FranFun
 ```
 FranTools/
 ├── FranTools.toc                      metadatos y orden de carga
+├── Libs/FranLib/                     librería común (copia de FranLib: no se edita aquí)
 ├── Core/
 │   ├── Constants.lua                  valores fijos
-│   ├── Util.lua                       utilidades genéricas (compartido)
-│   ├── Api.lua                        acceso a la API del juego (compartido)
-│   ├── ErrorLog.lua                   registro de errores de Lua (compartido)
 │   ├── Storage.lua                    SavedVariables
 │   ├── Migration.lua                  opciones traídas de StreamDeckWoW
 │   ├── Role.lua                       quién tanquea
@@ -455,6 +455,7 @@ FranTools/
 │   ├── PetTaunt.lua                   aviso del taunt de la mascota
 │   ├── Merchant.lua                   reparar y vender la basura
 │   ├── Threat.lua                     agro en las barras de nombre
+│   ├── CombatLog.lua                  registro de combate en mazmorras y bandas
 │   ├── Ammo.lua                       cazador: munición baja
 │   ├── Aspect.lua                     cazador: aspecto
 │   ├── Warrior.lua                    guerrero: Grito de guerra, Revancha, Provocar
@@ -462,10 +463,8 @@ FranTools/
 │   ├── Paladin.lua                    paladín: aura, bendición
 │   └── RighteousFury.lua              paladín: Furia justa
 ├── UI/
-│   ├── Tooltip.lua                    tooltips de ayuda (compartido)
 │   ├── NoticeBox.lua                  recuadro de aviso discreto
 │   ├── ThreatBadge.lua                marco de agro en una barra de nombre
-│   ├── Checkbox.lua                   casilla de opciones
 │   ├── NumberBox.lua                  caja numérica
 │   ├── OptionsPage.lua                página de opciones descrita como filas
 │   ├── Sidebar.lua                    barra lateral de la ventana
@@ -478,13 +477,10 @@ FranTools/
 │   │   ├── Warlock.lua                brujo
 │   │   └── Paladin.lua                paladín
 │   ├── ConfigWindow.lua               ventana /fran config
-│   ├── MinimapButton.lua              componente de botón del minimapa (compartido)
 │   └── Minimap.lua                    el botón del minimapa de este addon
 ├── tests/
 │   ├── test.lua                       las pruebas
-│   ├── api_stubs.lua                  API de WoW simulada (compartido)
-│   ├── run.js                         carga el addon y ejecuta las pruebas (compartido)
-│   └── package.json                   dependencia: fengari (compartido)
-└── tools/
-    └── sync_shared.py                 copia el código compartido a los otros addons
+│   ├── api_stubs.lua                  API de WoW simulada (de FranLib)
+│   ├── run.js                         carga el addon y ejecuta las pruebas (de FranLib)
+│   └── package.json                   dependencia: fengari (de FranLib)
 ```

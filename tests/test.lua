@@ -132,7 +132,8 @@ openPage(2)
 check(ns.ClassPages.For("MAGE") == nil and ns.ClassPages.For("HUNTER").title == "Cazador" and ns.ClassPages.For("WARRIOR").title == "Guerrero", "secciones por clase (el mago aún no tiene)")
 local cbs = {}
 for _, f in ipairs(frames) do if rawget(f, "_checked") ~= nil and rawget(f, "_OnClick") then cbs[#cbs+1] = f end end
-local gcbs = { table.remove(cbs, 1), table.remove(cbs, 1), table.remove(cbs, 1), table.remove(cbs, 1) }   -- página General
+local gcbs = {}   -- página General: sus casillas son las primeras
+for i = 1, 5 do gcbs[i] = table.remove(cbs, 1) end
 local cb = cbs[1]
 check(cb and rawget(cb, "_checked") == true, "la ventana tiene la casilla del aviso, marcada")
 rawset(cb, "_checked", false); rawget(cb, "_OnClick")(cb)
@@ -341,7 +342,7 @@ check(repaired == 1, "un vendedor que no repara: nada")
 fire("MERCHANT_CLOSED"); canRepair = true
 
 openPage(1)
-check(#gcbs == 4 and rawget(gcbs[1], "_checked") == true and rawget(gcbs[2], "_checked") == true, "página General: reparar y vender, marcadas")
+check(#gcbs == 5 and rawget(gcbs[1], "_checked") == true and rawget(gcbs[2], "_checked") == true, "página General: reparar y vender, marcadas")
 click(gcbs[1], false)
 check(FranToolsChar.repair.off == true, "desmarcar reparar se guarda")
 bagSlots = { [0] = { junk(1001) } }
@@ -774,7 +775,7 @@ geterrorhandler()("Interface/AddOns/OtroAddon/Main.lua:3: prueba de error ajena"
 check(#Log.Entries() == base + 1 and ownErrors() == 3, "los errores de otros addons no se apuntan, pero siguen su camino")
 fakeStack = string.rep("Interface/AddOns/FranTools/Core/Larga.lua:1: in function <z>\n", 100)
 geterrorhandler()("prueba de error larga")
-check(#Log.Entries()[base + 2].stack <= ns.Const.ERROR_LOG.MAX_STACK_CHARS, "la pila se recorta")
+check(#Log.Entries()[base + 2].stack <= ns.FranLib.errorLog.MAX_STACK_CHARS, "la pila se recorta")
 fakeStack = nil
 printed = {}
 SlashCmdList.FRANTOOLS("errores")
@@ -786,11 +787,42 @@ printed = {}
 SlashCmdList.FRANTOOLS("errores 9")
 check(hasPrinted("no hay ningún error con el número 9"), "un número que no está")
 for i = 1, 60 do geterrorhandler()("prueba de error número " .. i) end
-check(#Log.Entries() == ns.Const.ERROR_LOG.MAX_ENTRIES and Log.Entries()[1].message == "prueba de error número 11", "como mucho 50: se van los más antiguos")
+check(#Log.Entries() == ns.FranLib.errorLog.MAX_ENTRIES and Log.Entries()[1].message == "prueba de error número 11", "como mucho 50: se van los más antiguos")
 SlashCmdList.FRANTOOLS("errores borrar")
 check(#Log.Entries() == 0 and #FranToolsLog.entries == 0, "/fran errores borrar vacía la lista")
 local kept = {} for _, l in ipairs(printed) do if not l:find("prueba de error", 1, true) then kept[#kept + 1] = l end end
 printed = kept
+
+-- registro de combate en mazmorras y bandas
+local PEW = "PLAYER_ENTERING_WORLD"
+instance, combatLogging, printed = "none", false, {}
+step(PEW)
+check(not combatLogging and FranToolsChar.combatLog.startedByUs == nil, "registro: en el mundo abierto no se enciende")
+instance = "party"; step(PEW)
+check(combatLogging and FranToolsChar.combatLog.startedByUs == true and hasPrinted("registro de combate activado"), "registro: al entrar en una mazmorra se enciende y lo dice")
+instance = "none"; step("ZONE_CHANGED_NEW_AREA")
+check(not combatLogging and FranToolsChar.combatLog.startedByUs == nil and hasPrinted("registro de combate desactivado."), "registro: al salir se apaga")
+combatLogging, printed, instance = true, {}, "raid"
+step(PEW)
+check(combatLogging and FranToolsChar.combatLog.startedByUs == nil and not hasPrinted("activado"), "registro: si ya estaba puesto a mano no lo toca")
+instance = "none"; step(PEW)
+check(combatLogging, "registro: y al salir lo deja puesto")
+combatLogging, instance = false, "party"
+step(PEW)
+openPage(1)
+check(rawget(gcbs[5], "_checked") == true, "registro: casilla marcada por defecto")
+click(gcbs[5], false)
+check(FranToolsChar.combatLog.off == true and not combatLogging, "registro: desmarcarla lo apaga en el momento")
+step(PEW)
+check(not combatLogging, "registro: apagado no se enciende al entrar")
+SlashCmdList.FRANTOOLS("registro")
+check(combatLogging and FranToolsChar.combatLog.off == nil and rawget(gcbs[5], "_checked") == true, "registro: /fran registro lo enciende ya dentro de la mazmorra y marca la casilla")
+instance = "none"; step(PEW)
+combatLogLocked, printed, instance = true, {}, "party"
+step(PEW)
+check(not combatLogging and FranToolsChar.combatLog.startedByUs == nil and hasPrinted("escribe /combatlog"), "registro: si el juego no deja, lo explica sin error")
+combatLogLocked, instance = false, "none"
+step(PEW)
 
 UnitClass = realUnitClass
 combat, playerBuffs = false, {}

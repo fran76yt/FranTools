@@ -78,5 +78,19 @@ ns.GeneralPage = {
             },
         },
         { kind = "note", text = "Los recuadros se mueven arrastrándolos y cada uno recuerda su sitio." },
+        { kind = "header", label = "Registro de combate" },
+        {
+            kind = "check",
+            label = "Activarlo en mazmorras y bandas",
+            tooltip = {
+                "Registro de combate",
+                "Al entrar en una mazmorra o banda hace lo mismo que /combatlog: el juego",
+                "guarda todo el combate en " .. ns.Const.COMBAT_LOG.FILE_HINT .. ",",
+                "para analizarlo fuera del juego. Al salir lo apaga, si lo encendió él.",
+                "También con /fran registro.",
+            },
+            get = function() return ns.CombatLog.IsEnabled() end,
+            set = function(on) ns.CombatLog.SetEnabled(on) end,
+        },
     },
 }

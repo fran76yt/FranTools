@@ -80,7 +80,7 @@ for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "GROUP_ROSTER_UPDATE", "PLAYER
     Util.On(event, checkSoon)
 end
 -- Y al cambiar la casilla "Tanqueo yo" (Core/Role.lua).
-Util.Listen(Const.MSG.SETTINGS_CHANGED, checkSoon)
+Util.Listen(Util.SETTINGS_CHANGED, checkSoon)
 
 --------------------------------------------------------------------------------
 -- API del módulo

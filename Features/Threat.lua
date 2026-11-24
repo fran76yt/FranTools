@@ -165,7 +165,7 @@ for _, event in ipairs({ "UNIT_THREAT_LIST_UPDATE", "UNIT_THREAT_SITUATION_UPDAT
                          "GROUP_ROSTER_UPDATE", "PLAYER_ROLES_ASSIGNED" }) do
     Util.On(event, updateSoon)
 end
-Util.Listen(Const.MSG.SETTINGS_CHANGED, updateSoon)
+Util.Listen(Util.SETTINGS_CHANGED, updateSoon)
 
 --------------------------------------------------------------------------------
 -- API del módulo

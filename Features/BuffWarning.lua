@@ -64,7 +64,7 @@ end
 
 function methods.Changed(w)
     w.Check()
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+    Util.Fire(Util.SETTINGS_CHANGED)
 end
 
 -- Si un elemento vale: lo elegido por el jugador o, si no lo ha tocado, su

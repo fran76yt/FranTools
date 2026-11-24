@@ -36,6 +36,10 @@ lo que el jugador ha cambiado:
                off      true si lo ha apagado
   threat     agro en las barras de nombre de los enemigos:
                off      true si lo ha apagado
+  combatLog  registro de combate en mazmorras y bandas:
+               off          true si lo ha apagado
+               startedByUs  true si el registro que corre lo encendió el
+                            addon (para apagarlo solo entonces al salir)
   battleShout, demonArmor, aura, blessing
              avisos de beneficio (Features/BuffWarning.lua) del guerrero,
              el brujo y el paladín: off, point y anytime como en aspect; el
@@ -126,4 +130,8 @@ end
 
 function Storage.GetThreat()
     return section("threat")
+end
+
+function Storage.GetCombatLog()
+    return section("combatLog")
 end

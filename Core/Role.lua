@@ -41,7 +41,7 @@ end
 
 function Role.SetManualTank(on)
     settings().tank = on or nil
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+    Util.Fire(Util.SETTINGS_CHANGED)
 end
 
 -- El rol del grupo manda; sin rol, la casilla.

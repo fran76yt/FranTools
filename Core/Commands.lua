@@ -12,6 +12,7 @@ Comandos de chat
   /fran basura     apagar o encender vender la basura al abrir un vendedor
   /fran agro       apagar o encender el agro en las barras de nombre
   /fran agro estado  repasar paso a paso el agro del objetivo (si no se ve)
+  /fran registro   apagar o encender el registro de combate en mazmorras y bandas
   /fran grito      apagar o encender el aviso de Grito de guerra (guerrero)
   /fran revancha   apagar o encender el aviso de Revancha (guerrero)
   /fran provocar   apagar o encender el enfriamiento de Provocar (guerrero)
@@ -56,6 +57,8 @@ local TOGGLES = {
       "apagar o encender vender la basura al abrir un vendedor" },
     { "agro", function() return ns.Threat.Toggle() end, "agro en las barras de nombre",
       "apagar o encender el agro en las barras de nombre" },
+    { "registro", function() return ns.CombatLog.Toggle() end, "registro de combate en mazmorras y bandas",
+      "apagar o encender el registro de combate en mazmorras y bandas" },
     { "grito", function() return ns.BattleShout.Toggle() end, "aviso de Grito de guerra",
       "apagar o encender el aviso de Grito de guerra (guerrero)" },
     { "revancha", function() return ns.Revenge.Toggle() end, "aviso de Revancha",

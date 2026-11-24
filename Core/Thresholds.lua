@@ -69,7 +69,7 @@ function methods:Set(group, which, value)
     end
     self:Store(group, which, value)
     self.onChange()
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+    Util.Fire(Util.SETTINGS_CHANGED)
 end
 
 function Thresholds.Create(opts)

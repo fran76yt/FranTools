@@ -19,9 +19,11 @@ nada. Para cualquier clase; se apaga en la página General de /fran config o
 con /fran agro.
 
 El cliente de Forever es el moderno, que en combate puede ocultar la amenaza
-a los addons ("valor secreto", ver Core/Api.lua). Si pasa, no hay nada que
-pintar: se quitan los marcos y se explica una vez por sesión en el chat, en
-lugar de dar un error de Lua cada vez.
+a los addons ("valor secreto", ver Core/Api.lua). Ocultar no es quitar: el
+addon no puede mirarla, pero sí pasársela a la interfaz para que la pinte
+(UI/ThreatBadge.lua, ShowSecret), con los mismos colores. Si el juego no
+dejara ni eso, se quita el marco y se explica una vez por sesión en el chat,
+en lugar de dar un error de Lua cada vez.
 ]]
 
 local _, ns = ...
@@ -46,42 +48,71 @@ end
 
 local function percentText(player)
     if not player then return "" end
-    return ("%d%%"):format(math.floor(player.percent + 0.5))
+    return C.PERCENT_FORMAT:format(player.percent)
 end
 
-local secretNoticeShown = false
-
-local function onSecretThreat()
-    if secretNoticeShown then return end
-    secretNoticeShown = true
-    Util.Print("este cliente no deja a los addons leer la amenaza en combate, así que el agro en las barras de nombre no puede funcionar aquí. /fran agro para apagarlo.")
+-- Un campo de la amenaza que puede ser secreto: se devuelve tal cual, sin
+-- mirarlo (ni siquiera "x or y", que ya es mirarlo). Sin amenaza, default.
+local function raw(t, key, default)
+    if not t then return default end
+    local value = t[key]
+    if Api.IsSecret(value) then return value end
+    if value == nil then return default end
+    return value
 end
 
--- Color y texto para la barra de unit, o nil si no lleva nada.
+-- Lo que hay que pintar en la barra de unit, o nil si no lleva nada:
+--   { color, text }    con la amenaza a la vista
+--   { secret = true, tanking, petTanking, percent, hasPercent }
+--                      con la amenaza oculta, para ThreatBadge.ShowSecret
 local function display(unit)
     if not Threat.IsEnabled() or not Api.CanAttack(unit) then return nil end
-    local player, playerSecret = Api.Threat("player", unit)
-    local pet, petSecret = Api.Threat("pet", unit)
-    if playerSecret or petSecret then
-        onSecretThreat()
-        return nil
-    end
+    local player, pet = Api.Threat("player", unit), Api.Threat("pet", unit)
     if not player and not pet then return nil end
-    return C.COLOR[situation(player, pet)], percentText(player)
+    if raw(player, "secret", false) or raw(pet, "secret", false) then
+        return {
+            secret = true,
+            tanking = raw(player, "tanking", false),
+            petTanking = raw(pet, "tanking", false),
+            percent = raw(player, "percent", 0),
+            hasPercent = player ~= nil,
+        }
+    end
+    return { color = C.COLOR[situation(player, pet)], text = percentText(player) }
 end
 
 --------------------------------------------------------------------------------
 -- Actualizar
 --------------------------------------------------------------------------------
 
+local secretFailureShown = false
+
+-- Si el juego no deja ni pintar la amenaza oculta, se explica una vez por
+-- sesión (con el motivo, para saber qué ha fallado) en lugar de dar un error
+-- de Lua en cada actualización.
+local function onSecretFailure(reason)
+    if secretFailureShown then return end
+    secretFailureShown = true
+    Util.Print(("este cliente oculta la amenaza en combate y no deja pintarla, así que el agro en las barras de nombre no funciona aquí (%s). /fran agro para apagarlo."):format(tostring(reason)))
+end
+
+local function showSecret(plate, look)
+    local ok, reason = pcall(ns.ThreatBadge.ShowSecret, plate, look)
+    if ok then return end
+    ns.ThreatBadge.Hide(plate)
+    onSecretFailure(reason)
+end
+
 function Threat.Update(unit)
     local plate = Api.NamePlateFor(unit)
     if not plate then return end
-    local color, text = display(unit)
-    if color then
-        ns.ThreatBadge.Show(plate, color, text)
-    else
+    local look = display(unit)
+    if not look then
         ns.ThreatBadge.Hide(plate)
+    elseif look.secret then
+        showSecret(plate, look)
+    else
+        ns.ThreatBadge.Show(plate, look.color, look.text)
     end
 end
 
@@ -124,9 +155,9 @@ local function yesNo(value)
     return value and "sí" or "no"
 end
 
-local function threatText(t, secret)
-    if secret then return "oculta por el juego (valor secreto): el addon no puede leerla" end
+local function threatText(t)
     if not t then return "nada (no estáis en combate)" end
+    if t.secret then return "oculta por el juego (valor secreto): el addon la pinta sin leerla" end
     return ("tanqueando %s, situación %s, %s%%"):format(yesNo(t.tanking), tostring(t.status), tostring(t.percent))
 end
 

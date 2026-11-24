@@ -620,10 +620,31 @@ local p5 = plate("nameplate5")
 threat.player.nameplate5 = { SECRET, SECRET, SECRET }
 printed = {}
 step("UNIT_THREAT_LIST_UPDATE", "nameplate5")
-check(shownBadge(p5) == nil and hasPrinted("no deja a los addons leer la amenaza"), "amenaza secreta: sin marco y lo explica en el chat")
+local b5 = shownBadge(p5)
+check(b5 and #printed == 0, "amenaza secreta: se pinta igual, sin avisos")
+local vcb = rawget(b5.edges[1], "_vcb")
+local C3 = ns.Const.THREAT.COLOR
+check(vcb[1] == SECRET and vcb[2].r == C3.player[1] and vcb[3].fromBoolean == false and vcb[3].ifTrue.g == C3.pet[2] and vcb[3].ifFalse.r == C3.other[1],
+      "el marco: rojo si va a por ti (lo decide el juego); si no, verde con la mascota o gris")
+local bar = b5.warnBars[1]
+check(rawget(bar, "_shown") and rawget(bar, "_value") == SECRET and rawget(rawget(bar, "_bartex"), "_vcb")[3].g == C3.warning[2], "el ámbar: una barra que se llena con tu amenaza")
+check(rawget(b5.text, "_fmt")[1] == "%.0f%%" and rawget(b5.text, "_fmt")[2] == SECRET, "el porcentaje lo escribe el juego")
+pet = true; threat.pet.nameplate5 = { SECRET, SECRET, SECRET }
+step("UNIT_THREAT_LIST_UPDATE", "nameplate5")
+check(rawget(b5.edges[1], "_vcb")[3].fromBoolean == SECRET, "y si va a por tu mascota también lo decide el juego")
+threat.player.nameplate5 = { false, 0, 30 }; threat.pet.nameplate5 = { true, 3, 100 }
+step("UNIT_THREAT_LIST_UPDATE", "nameplate5")
+check(sameColor(badgeColor(p5), "pet") and not rawget(bar, "_shown") and rawget(b5.text, "_text") == "30%", "al volver a verse la amenaza, se pinta como siempre")
+pet = false; threat.pet.nameplate5 = nil
+threat.player.nameplate5 = { SECRET, SECRET, SECRET }
+secretPaintRefused = true
 printed = {}
 step("UNIT_THREAT_LIST_UPDATE", "nameplate5")
-check(not hasPrinted("no deja a los addons"), "la explicación sale una vez por sesión")
+check(shownBadge(p5) == nil and hasPrinted("no deja pintarla"), "si el juego no deja ni pintarla: sin marco y lo explica en el chat")
+printed = {}
+step("UNIT_THREAT_LIST_UPDATE", "nameplate5")
+check(not hasPrinted("no deja pintarla"), "la explicación sale una vez por sesión")
+secretPaintRefused = false
 unitNames.target, plates.target, threat.player.target = "Lobo", p5, threat.player.nameplate5
 printed = {}
 SlashCmdList.FRANTOOLS("agro estado")

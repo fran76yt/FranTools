@@ -224,7 +224,15 @@ Para cualquier clase. En la barra de nombre de cada enemigo con el que estáis e
 - El marco va por encima de la barra de vida, para que su propio borde no lo tape. Sirve con las barras de nombre de los clientes clásicos y de los modernos (la barra de vida está en sitios distintos).
 - **Si no se ve:** selecciona un enemigo con el que estés en combate y escribe `/fran agro estado`. Dice, paso a paso, si el aviso está encendido, si el juego da la amenaza, si el objetivo tiene barra de nombre y barra de vida, qué amenaza tenéis tú y la mascota, y si el marco está puesto.
 
-**En Forever no funciona** (comprobado en el juego): su cliente oculta la amenaza a los addons en combate, que es justo cuando la hay (llega como «valor secreto», que no se puede leer). El addon lo detecta, no pinta nada y lo explica una vez por sesión en el chat; `/fran agro estado` lo dice también. Se queda en el addon por si en otro cliente sí la da, y se apaga con `/fran agro`.
+**En Forever, con la amenaza oculta:** su cliente puede ocultar la amenaza a los addons en combate, y entonces llega como «valor secreto». Un addon no puede leer ni comparar ese valor, pero sí dárselo a la interfaz del juego para que lo pinte. Así lo cuenta la documentación de la API de Blizzard para Forever (la rama `forever` de su código de interfaz). El addon pinta lo mismo sin mirar los valores:
+
+- El **color del marco** lo elige el juego a partir de «¿va a por ti?» y «¿va a por tu mascota?» (`SetVertexColorFromBoolean`, que acepta un sí o no secreto).
+- El **ámbar** es una barra en cada lado del marco que solo se llena del todo cuando tu amenaza pasa del 80 %.
+- El **porcentaje** lo escribe el juego (`SetFormattedText`).
+
+Si un cliente no dejara ni eso, el addon quita el marco y lo explica una vez por sesión en el chat, con el motivo; se apaga con `/fran agro`. `/fran agro estado` dice si la amenaza llega oculta.
+
+Sin addons, el juego también enseña tu porcentaje de amenaza en el marco del objetivo si activas la opción de amenaza numérica de la interfaz (variable `threatShowNumeric`).
 
 ---
 
@@ -252,7 +260,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`Features/Paladin.lua`](Features/Paladin.lua) | Avisos de aura y bendición |
 | [`Features/RighteousFury.lua`](Features/RighteousFury.lua) | Aviso de Furia justa, según si tanqueas |
 | [`Features/Merchant.lua`](Features/Merchant.lua) | Al abrir un vendedor: vende la basura en tandas y después repara |
-| [`Features/Threat.lua`](Features/Threat.lua) | Agro en las barras de nombre: decide el color y el porcentaje de cada enemigo |
+| [`Features/Threat.lua`](Features/Threat.lua) | Agro en las barras de nombre: decide el color y el porcentaje de cada enemigo, o se los pasa sin mirar al marco si el juego los oculta |
 | [`UI/Tooltip.lua`](UI/Tooltip.lua) | *Compartido.* Tooltips de ayuda (título y líneas en gris) |
 | [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda; los no movidos se apilan |
 | [`UI/ThreatBadge.lua`](UI/ThreatBadge.lua) | Marco de color y texto alrededor de la barra de vida de una barra de nombre, sin tocar la barra |

@@ -267,6 +267,11 @@ Const.THREAT = {
         pet = { 0.3, 0.9, 0.3 },
         other = { 0.6, 0.6, 0.6 },
     },
+    PERCENT_FORMAT = "%.0f%%",   -- el porcentaje, redondeado ("85%")
+    -- Si el juego oculta la amenaza, el ámbar es una barra que se llena del
+    -- todo al llegar a WARN_PERCENT (y está vacía WARN_RAMP por debajo).
+    WARN_RAMP = 1,
+    BAR_TEXTURE = "Interface\\Buttons\\WHITE8X8",
     BORDER = 2,        -- grosor del marco
     TEXT_GAP = 3,      -- separación del porcentaje a la derecha de la barra
     LEVEL_ABOVE = 5,   -- capas por encima de la barra de vida (y de su borde)

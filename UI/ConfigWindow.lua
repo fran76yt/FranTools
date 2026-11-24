@@ -110,13 +110,18 @@ local function createTitle(f)
 end
 
 -- Una página por entrada, a la derecha de la barra lateral (left es su ancho).
+-- Devuelve el alto de la más alta.
 local function createPages(f, list, left)
+    local tallest = 0
     for i, e in ipairs(list) do
         local page = CreateFrame("Frame", nil, f)
         page:SetPoint("TOPLEFT", left, 0)
         page:SetPoint("BOTTOMRIGHT")
-        pages[i] = { frame = page, update = ns.OptionsPage.Build(page, e.rows) }
+        local update, height = ns.OptionsPage.Build(page, e.rows)
+        pages[i] = { frame = page, update = update }
+        tallest = math.max(tallest, height)
     end
+    return tallest
 end
 
 local function create()
@@ -124,7 +129,9 @@ local function create()
     local left = ns.Sidebar.Width()
     frame = createFrame(left + UI.CONTENT_WIDTH)
     createTitle(frame)
-    createPages(frame, list, left)
+    -- La ventana crece si alguna página no cabe en el alto de siempre.
+    local tallest = createPages(frame, list, left)
+    frame:SetHeight(math.max(UI.HEIGHT, tallest + UI.BOTTOM_MARGIN))
     ns.Sidebar.Create(frame, list, showPage, ns.Storage.GetSidebar()):Select(1)
 end
 

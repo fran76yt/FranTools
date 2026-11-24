@@ -41,9 +41,10 @@ Core\Api.lua
 #   Registro de errores: lo antes posible, para que apunte también los
 #   errores al cargar los archivos siguientes
 Core\ErrorLog.lua
-#   Datos guardados, y las opciones que había en StreamDeckWoW
+#   Datos guardados, las opciones que había en StreamDeckWoW y quién tanquea
 Core\Storage.lua
 Core\Migration.lua
+Core\Role.lua
 #   Piezas de lógica comunes: beneficios del jugador y umbrales de aviso
 Core\Buffs.lua
 Core\Thresholds.lua
@@ -55,6 +56,8 @@ UI\ThreatBadge.lua
 #     motores de aviso que usan varias clases
 Features\BuffWarning.lua
 Features\CountWarning.lua
+Features\ReadyWarning.lua
+Features\CooldownWarning.lua
 #     generales y de cada clase
 Features\PetTaunt.lua
 Features\Merchant.lua

@@ -84,24 +84,6 @@ function methods.SetChosen(w, item, on)
     w.Changed()
 end
 
--- Se guarda como anytime (avisa también fuera de combate) y solo si difiere
--- del valor por defecto del aviso (def.anytime), para que lo normal no ocupe
--- nada en el archivo.
-local function anytimeDefault(w)
-    return w.def.anytime == true
-end
-
-function methods.IsCombatOnly(w)
-    local saved = w.Settings().anytime
-    if saved == nil then return not anytimeDefault(w) end
-    return not saved
-end
-
-function methods.SetCombatOnly(w, on)
-    Util.SetOverride(w.Settings(), "anytime", not on, anytimeDefault(w))
-    w.Changed()
-end
-
 --------------------------------------------------------------------------------
 -- Aviso
 --------------------------------------------------------------------------------
@@ -166,8 +148,13 @@ function BuffWarning.Create(def)
         settings = function() return Storage.Get(def.key) end,
         tooltip = def.tooltip,
     })
-    local switch = Util.Switch(function() return Storage.Get(def.key) end, function() w.Check() end)
+    local function settings() return Storage.Get(def.key) end
+    local function check() w.Check() end
+    local switch = Util.Switch(settings, check)
     w.IsEnabled, w.SetEnabled, w.Toggle = switch.IsEnabled, switch.SetEnabled, switch.Toggle
+    -- def.anytime: avisa también fuera de combate de entrada.
+    local combat = Util.CombatOnly(settings, def.anytime == true, check)
+    w.IsCombatOnly, w.SetCombatOnly = combat.IsCombatOnly, combat.SetCombatOnly
     listenEvents(w)
     return w
 end

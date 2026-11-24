@@ -132,7 +132,7 @@ openPage(2)
 check(ns.ClassPages.For("MAGE") == nil and ns.ClassPages.For("HUNTER").title == "Cazador" and ns.ClassPages.For("WARRIOR").title == "Guerrero", "secciones por clase (el mago aún no tiene)")
 local cbs = {}
 for _, f in ipairs(frames) do if rawget(f, "_checked") ~= nil and rawget(f, "_OnClick") then cbs[#cbs+1] = f end end
-local gcbs = { table.remove(cbs, 1), table.remove(cbs, 1), table.remove(cbs, 1) }   -- página General
+local gcbs = { table.remove(cbs, 1), table.remove(cbs, 1), table.remove(cbs, 1), table.remove(cbs, 1) }   -- página General
 local cb = cbs[1]
 check(cb and rawget(cb, "_checked") == true, "la ventana tiene la casilla del aviso, marcada")
 rawset(cb, "_checked", false); rawget(cb, "_OnClick")(cb)
@@ -198,6 +198,7 @@ check(ammoText() == "Munición baja: 60" and FranToolsChar.ammo.off == nil, "al 
 -- umbrales por tipo en la pestaña Cazador
 local nb = {}
 for _, f in ipairs(frames) do if rawget(f, "_OnEditFocusLost") then nb[#nb+1] = f end end
+local iconSizeBox = table.remove(nb, 1)   -- página General: tamaño del icono
 local function typeIn(box, text) rawset(box, "_text", text) rawget(box, "_OnEditFocusLost")(box) end
 local function textOf(box) return rawget(box, "_text") end
 check(#nb == 4 and textOf(nb[1]) == "200" and textOf(nb[2]) == "50" and textOf(nb[3]) == "200" and textOf(nb[4]) == "50", "cuatro cajas con los valores por defecto (flechas y balas)")
@@ -340,7 +341,7 @@ check(repaired == 1, "un vendedor que no repara: nada")
 fire("MERCHANT_CLOSED"); canRepair = true
 
 openPage(1)
-check(#gcbs == 3 and rawget(gcbs[1], "_checked") == true and rawget(gcbs[2], "_checked") == true, "página General: reparar y vender, marcadas")
+check(#gcbs == 4 and rawget(gcbs[1], "_checked") == true and rawget(gcbs[2], "_checked") == true, "página General: reparar y vender, marcadas")
 click(gcbs[1], false)
 check(FranToolsChar.repair.off == true, "desmarcar reparar se guarda")
 bagSlots = { [0] = { junk(1001) } }
@@ -546,14 +547,14 @@ step("UNIT_AURA", "player")
 check(boxText("FranToolsRighteousFuryNotice") == nil, "solo, Furia justa no avisa")
 inGroup = true; step("GROUP_ROSTER_UPDATE")
 check(boxText("FranToolsRighteousFuryNotice") == "Furia justa: quítala" and boxLevel("FranToolsRighteousFuryNotice") == "critical", "en grupo sin tanquear y con Furia justa: rojo")
-ns.RighteousFury.SetManualTank(true)
-check(FranToolsChar.righteousFury.tank == true and boxText("FranToolsRighteousFuryNotice") == nil, "con Tanqueo yo, llevarla es lo correcto")
+ns.Role.SetManualTank(true); runTimers()
+check(FranToolsChar.role.tank == true and boxText("FranToolsRighteousFuryNotice") == nil, "con Tanqueo yo, llevarla es lo correcto")
 playerBuffs[3] = nil; step("UNIT_AURA", "player")
 check(boxText("FranToolsRighteousFuryNotice") == "Sin Furia justa" and boxLevel("FranToolsRighteousFuryNotice") == "warning", "tanqueando sin ella: ámbar")
 groupRole = "DAMAGER"; step("PLAYER_ROLES_ASSIGNED")
 check(boxText("FranToolsRighteousFuryNotice") == nil, "el rol del grupo manda sobre la casilla")
-groupRole = "TANK"; ns.RighteousFury.SetManualTank(false); step("PLAYER_ROLES_ASSIGNED")
-check(boxText("FranToolsRighteousFuryNotice") == "Sin Furia justa" and FranToolsChar.righteousFury.tank == nil, "con rol de tanque, sin la casilla, también")
+groupRole = "TANK"; ns.Role.SetManualTank(false); step("PLAYER_ROLES_ASSIGNED")
+check(boxText("FranToolsRighteousFuryNotice") == "Sin Furia justa" and FranToolsChar.role.tank == nil, "con rol de tanque, sin la casilla, también")
 inGroup, groupRole = false, "NONE"; step("GROUP_ROSTER_UPDATE")
 check(boxText("FranToolsRighteousFuryNotice") == nil, "al dejar el grupo se quita")
 
@@ -565,7 +566,7 @@ for _, class in ipairs({ "WARRIOR", "WARLOCK", "PALADIN" }) do
     titles[#titles + 1] = page.title
   end
 end
-check(table.concat(titles, ",") == "Gritos,Mascota,Reactivos,Armadura,Aura,Bendición,Furia justa", "páginas de guerrero, brujo y paladín")
+check(table.concat(titles, ",") == "Gritos,Tanque,Mascota,Reactivos,Armadura,Aura,Bendición,Furia justa", "páginas de guerrero, brujo y paladín")
 printed = {}
 SlashCmdList.FRANTOOLS("ayuda")
 check(hasPrinted("/fran furia") and hasPrinted("/fran fragmentos") and hasPrinted("/fran grito"), "la ayuda lista los comandos nuevos")
@@ -651,6 +652,98 @@ SlashCmdList.FRANTOOLS("agro estado")
 check(hasPrinted("tu amenaza: oculta por el juego"), "agro estado dice que la amenaza está oculta")
 check(#ns.ErrorLog.Entries() == logged, "auras y amenaza ocultas no dan errores de Lua")
 unitNames.target, plates.target, threat.player.target, plates.nameplate5, threat.player.nameplate5 = nil, nil, nil, nil, nil
+
+-- guerrero protección: agro de tanque, Revancha y Provocar
+asClass("WARRIOR")
+local p6 = plate("nameplate6")
+threat.player.nameplate6 = { true, 3, 100 }
+ns.Role.SetManualTank(true)
+step("UNIT_THREAT_LIST_UPDATE", "nameplate6")
+check(sameColor(badgeColor(p6), "held"), "tanque: va a por ti, verde")
+threat.player.nameplate6 = { true, 2, 100 }
+step("UNIT_THREAT_LIST_UPDATE", "nameplate6")
+check(sameColor(badgeColor(p6), "shaky"), "tanque: va a por ti pero otro está a punto de quitártelo, ámbar")
+threat.player.nameplate6 = { false, 0, 70 }
+step("UNIT_THREAT_LIST_UPDATE", "nameplate6")
+check(sameColor(badgeColor(p6), "loose") and rawget(badge(p6).text, "_text") == "70%", "tanque: se te ha escapado, rojo y tu amenaza")
+threat.player.nameplate6 = { SECRET, SECRET, SECRET }
+step("UNIT_THREAT_LIST_UPDATE", "nameplate6")
+local vcb6 = rawget(badge(p6).edges[1], "_vcb")
+check(vcb6[2].g == C3.held[2] and vcb6[3].ifFalse.r == C3.loose[1] and not rawget(badge(p6).warnBars[1], "_shown"),
+      "tanque con la amenaza oculta: verde si va a por ti, rojo si no, sin ámbar")
+ns.Role.SetManualTank(false); runTimers()
+check(rawget(badge(p6).edges[1], "_vcb")[2].r == C3.player[1] and rawget(badge(p6).warnBars[1], "_shown"), "sin tanquear vuelven los colores de siempre")
+plates.nameplate6, threat.player.nameplate6 = nil, nil
+
+known[6572], known[6574], spellnames[6574] = true, true, "Revancha"
+combat = true; step("PLAYER_REGEN_DISABLED")
+local function revengeText() return boxText("FranToolsRevengeNotice") end
+check(revengeText() == nil, "Revancha sin poder usarla: nada")
+usable[6574] = true; step("SPELL_UPDATE_USABLE")
+local rv = _G.FranToolsRevengeNotice
+check(revengeText() == "Revancha" and rawget(rv.icon, "_tex") == 100000 + 6574 and rawget(rv.text, "_color")[2] == 1,
+      "tras esquivar: Revancha en verde, con el icono del rango más alto que sabes")
+usable[6574] = false; step("SPELL_UPDATE_USABLE")
+check(revengeText() == nil, "al pasar el momento se quita")
+SlashCmdList.FRANTOOLS("revancha")
+usable[6574] = true; step("SPELL_UPDATE_USABLE")
+check(revengeText() == nil and FranToolsChar.revenge.off == true, "/fran revancha lo apaga")
+SlashCmdList.FRANTOOLS("revancha"); runTimers()
+check(revengeText() == "Revancha", "y lo vuelve a encender")
+usable[6574] = nil; step("SPELL_UPDATE_USABLE")
+
+known[355], spellnames[355] = true, "Provocar"
+local function tauntText() return boxText("FranToolsTauntNotice") end
+step("PLAYER_REGEN_DISABLED")
+check(tauntText() == "Provocar listo", "en combate: Provocar listo")
+cooldownsSecret = true
+step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t1", 355)
+local tb = _G.FranToolsTauntNotice
+check(tauntText() == "Provocar: 8 s" and rawget(tb.badge, "_text") == "8" and rawget(tb.icon, "_desat") == true,
+      "al lanzarlo con los enfriamientos ocultos: su propia cuenta, 8 s, icono apagado")
+now = now + 3.5; runTimers()
+check(tauntText() == "Provocar: 5 s", "la cuenta atrás avanza")
+now = now + 5; runTimers()
+check(tauntText() == "Provocar listo" and rawget(tb.badge, "_text") == "" and rawget(tb.icon, "_desat") == false, "al acabar, listo otra vez")
+known[12765] = true
+step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t2", 355)
+check(tauntText() == "Provocar: 6 s", "con Provocar mejorado: 6 s")
+cooldownsSecret = false; cooldowns[355] = { now, 7 }
+step("SPELL_UPDATE_COOLDOWN")
+check(tauntText() == "Provocar: 7 s", "si el juego da el enfriamiento, manda el suyo")
+now = now + 8; runTimers()
+cooldowns[355], known[12765] = nil, nil
+step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t3", 6673)
+check(tauntText() == "Provocar listo", "otro hechizo no cuenta")
+combat = false; step("PLAYER_REGEN_ENABLED")
+check(tauntText() == nil, "fuera de combate no se ve")
+ns.TauntCooldown.SetCombatOnly(false)
+check(tauntText() == "Provocar listo" and FranToolsChar.taunt.anytime == true, "si se pide, se ve siempre")
+
+-- recuadros solo con el icono, y su tamaño
+local N = ns.Const.NOTICE
+check(rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true, "con texto: el ancho de siempre")
+SlashCmdList.FRANTOOLS("iconos")
+local square = N.ICON_SIZE + 2 * N.PADDING
+check(FranToolsChar.notices.iconOnly == true and rawget(tb, "_w") == square and rawget(tb, "_h") == square and rawget(tb.text, "_shown") == false,
+      "/fran iconos: solo el icono, en un cuadrado")
+openPage(1)
+check(rawget(gcbs[4], "_checked") == true, "y se ve marcado en General")
+typeIn(iconSizeBox, "40")
+check(FranToolsChar.notices.iconSize == 40 and rawget(tb.icon, "_w") == 40 and rawget(tb, "_w") == 40 + 2 * N.PADDING, "tamaño del icono, desde General")
+typeIn(iconSizeBox, "500")
+check(FranToolsChar.notices.iconSize == N.ICON_SIZE_MAX, "sin pasar del máximo")
+typeIn(iconSizeBox, tostring(N.ICON_SIZE))
+check(FranToolsChar.notices.iconSize == nil, "el de siempre no se guarda")
+click(gcbs[4], false)
+check(FranToolsChar.notices.iconOnly == nil and rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true, "al desmarcarlo vuelve el texto")
+ns.TauntCooldown.SetCombatOnly(true)
+check(FranToolsChar.taunt.anytime == nil and tauntText() == nil, "solo en combate otra vez")
+check(rawget(_G.FranToolsConfig, "_h") > ns.Const.UI.HEIGHT, "la ventana de opciones crece para que quepa la página más alta")
+printed = {}
+SlashCmdList.FRANTOOLS("ayuda")
+check(hasPrinted("/fran revancha") and hasPrinted("/fran provocar") and hasPrinted("/fran iconos"), "la ayuda lista los comandos del guerrero y de los iconos")
+known[355], known[6572], known[6574] = nil, nil, nil
 
 -- registro de errores
 local Log = ns.ErrorLog

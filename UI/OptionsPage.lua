@@ -24,8 +24,9 @@ Tipos de fila:
 Las filas van una debajo de otra. Cada una ocupa ROW_HEIGHT salvo las notas,
 que miden lo que su texto, y los títulos llevan un poco de aire encima.
 
-  local update = ns.OptionsPage.Build(page, rows)
+  local update, height = ns.OptionsPage.Build(page, rows)
   update()   -- vuelve a leer todos los valores
+  height     -- lo que ocupan las filas desde arriba de la página
 ]]
 
 local _, ns = ...
@@ -130,7 +131,8 @@ function OptionsPage.Build(page, rows)
         for _, c in ipairs(made or {}) do controls[#controls + 1] = c end
         y = y - (height or UI.ROW_HEIGHT)
     end
-    return function()
+    local function update()
         for _, c in ipairs(controls) do c:Update() end
     end
+    return update, -y
 end

@@ -13,6 +13,9 @@ Comandos de chat
   /fran agro       apagar o encender el agro en las barras de nombre
   /fran agro estado  repasar paso a paso el agro del objetivo (si no se ve)
   /fran grito      apagar o encender el aviso de Grito de guerra (guerrero)
+  /fran revancha   apagar o encender el aviso de Revancha (guerrero)
+  /fran provocar   apagar o encender el enfriamiento de Provocar (guerrero)
+  /fran iconos     avisos solo con el icono, sin texto, o con texto
   /fran fragmentos apagar o encender el aviso de fragmentos de alma (brujo)
   /fran piedra     apagar o encender el aviso de piedra de salud (brujo)
   /fran armadura   apagar o encender el aviso de armadura (brujo)
@@ -55,6 +58,12 @@ local TOGGLES = {
       "apagar o encender el agro en las barras de nombre" },
     { "grito", function() return ns.BattleShout.Toggle() end, "aviso de Grito de guerra",
       "apagar o encender el aviso de Grito de guerra (guerrero)" },
+    { "revancha", function() return ns.Revenge.Toggle() end, "aviso de Revancha",
+      "apagar o encender el aviso de Revancha (guerrero)" },
+    { "provocar", function() return ns.TauntCooldown.Toggle() end, "enfriamiento de Provocar",
+      "apagar o encender el enfriamiento de Provocar (guerrero)" },
+    { "iconos", function() return ns.NoticeBox.ToggleIconOnly() end, "avisos solo con el icono",
+      "avisos solo con el icono, sin texto, o con texto" },
     { "fragmentos", function() return ns.Shards.Toggle() end, "aviso de fragmentos de alma",
       "apagar o encender el aviso de fragmentos de alma (brujo)" },
     { "piedra", function() return ns.Healthstone.Toggle() end, "aviso de piedra de salud",

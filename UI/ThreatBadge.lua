@@ -8,22 +8,23 @@ barra en sí: si se tocara su color, el juego lo volvería a pintar con el suyo
 en cada actualización.
 
   ns.ThreatBadge.Show(plate, { r, g, b }, "85%")
-  ns.ThreatBadge.ShowSecret(plate, { tanking, petTanking, percent })
+  ns.ThreatBadge.ShowSecret(plate, { tanking, petTanking, percent, hasPercent }, scheme)
   ns.ThreatBadge.Hide(plate)
   ns.ThreatBadge.Get(plate)   -- el indicador de esa barra, o nil
 
 Show pinta lo que el addon ya ha decidido. ShowSecret es para cuando el
 juego oculta la amenaza (valores secretos, en combate): el addon no puede
-mirarla, pero sí dársela a la interfaz para que la pinte. Se monta en dos
-capas que reproducen los mismos colores que Show:
+mirarla, pero sí dársela a la interfaz para que la pinte. scheme dice los
+colores { player, pet, other, warning }: los de siempre o los del tanque
+(Features/Threat.lua). Se monta en dos capas:
 
-  * el marco: rojo si va a por ti; si no, verde si va a por tu mascota; si
-    no, gris. Lo decide el juego con SetVertexColorFromBoolean, que acepta
+  * el marco: player si va a por ti; si no, pet si va a por tu mascota; si
+    no, other. Lo decide el juego con SetVertexColorFromBoolean, que acepta
     un "sí o no" secreto.
-  * encima, el ámbar ("estás a punto"): una barra en cada lado, que va de
-    WARN_PERCENT - WARN_RAMP a WARN_PERCENT. Por debajo queda vacía y por
-    encima se llena entera: hace de umbral sin que el addon compare nada.
-    Si va a por ti, se pinta en rojo, que manda sobre el ámbar.
+  * encima, si scheme trae warning ("estás a punto"): una barra en cada
+    lado, que va de WARN_PERCENT - WARN_RAMP a WARN_PERCENT. Por debajo
+    queda vacía y por encima se llena entera: hace de umbral sin que el
+    addon compare nada. Si va a por ti, se pinta del color player, que manda.
   * el porcentaje se escribe con SetFormattedText, que también lo acepta.
 
 El juego reutiliza las barras de nombre de unas unidades para otras: cada una
@@ -113,17 +114,12 @@ end
 --------------------------------------------------------------------------------
 
 -- Los ColorMixin se crean la primera vez que hacen falta (CreateColor es de
--- la interfaz de Blizzard) y se reutilizan.
-local colors
+-- la interfaz de Blizzard) y se reutilizan, uno por color de Const.
+local mixins = {}
 
-local function secretColors()
-    colors = colors or {
-        player = Api.Color(T.COLOR.player),
-        warning = Api.Color(T.COLOR.warning),
-        pet = Api.Color(T.COLOR.pet),
-        other = Api.Color(T.COLOR.other),
-    }
-    return colors
+local function mixin(rgb)
+    mixins[rgb] = mixins[rgb] or Api.Color(rgb)
+    return mixins[rgb]
 end
 
 local function setWarnBarsShown(f, shown)
@@ -154,18 +150,21 @@ end
 -- secretos o no, no se miran aquí: solo se pasan a funciones del juego que
 -- los aceptan. hasPercent (normal) dice si hay porcentaje tuyo que enseñar:
 -- si solo la mascota está en combate, percent es 0 y el texto va vacío.
-function ThreatBadge.ShowSecret(plate, look)
-    local f, c = badgeFor(plate), secretColors()
-    local notMine = Api.ColorFromBoolean(look.petTanking, c.pet, c.other)
+function ThreatBadge.ShowSecret(plate, look, scheme)
+    local f = badgeFor(plate)
+    local mine = mixin(scheme.player)
+    local notMine = Api.ColorFromBoolean(look.petTanking, mixin(scheme.pet), mixin(scheme.other))
     for _, edge in ipairs(f.edges) do
         edge:SetColorTexture(unpack(WHITE))
-        edge:SetVertexColorFromBoolean(look.tanking, c.player, notMine)
+        edge:SetVertexColorFromBoolean(look.tanking, mine, notMine)
     end
-    for _, bar in ipairs(f.warnBars) do
-        bar:SetValue(look.percent)
-        bar:GetStatusBarTexture():SetVertexColorFromBoolean(look.tanking, c.player, c.warning)
+    if scheme.warning then
+        for _, bar in ipairs(f.warnBars) do
+            bar:SetValue(look.percent)
+            bar:GetStatusBarTexture():SetVertexColorFromBoolean(look.tanking, mine, mixin(scheme.warning))
+        end
     end
-    setWarnBarsShown(f, true)
+    setWarnBarsShown(f, scheme.warning ~= nil)
     f.text:SetTextColor(unpack(WHITE))
     if look.hasPercent then
         f.text:SetFormattedText(T.PERCENT_FORMAT, look.percent)

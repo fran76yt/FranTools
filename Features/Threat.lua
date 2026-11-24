@@ -14,6 +14,13 @@ amenaza al lado (a 100 se lo quitas a quien lo tiene):
 El ámbar va por delante del verde: es justo lo que interesa al cazador que
 deja tanquear a la mascota, saber que está a punto de quitárselo.
 
+Si tanqueas (Core/Role.lua: el rol del grupo o la casilla "Tanqueo yo"), lo
+que importa es lo contrario, y los colores cambian:
+
+  verde   va a por ti (o a por tu mascota): bien
+  ámbar   va a por ti, pero otro está a punto de quitártelo
+  rojo    se te ha escapado: va a por otro (un sanador, un DPS...)
+
 Los enemigos con los que no estáis en combate ni tú ni tu mascota no llevan
 nada. Para cualquier clase; se apaga en la página General de /fran config o
 con /fran agro.
@@ -46,6 +53,23 @@ local function situation(player, pet)
     return "other"
 end
 
+-- Lo mismo si tanqueas. status 2: va a por ti, pero otro tiene más amenaza.
+local function tankSituation(player, pet)
+    if player and player.tanking then
+        return player.status == 2 and "shaky" or "held"
+    end
+    if pet and pet.tanking then return "held" end
+    return "loose"
+end
+
+-- Colores para la amenaza oculta (ThreatBadge.ShowSecret). Ahí no se puede
+-- distinguir el ámbar del tanque (haría falta mirar status), así que el
+-- tanque solo ve verde o rojo.
+local SCHEMES = {
+    normal = { player = C.COLOR.player, pet = C.COLOR.pet, other = C.COLOR.other, warning = C.COLOR.warning },
+    tank = { player = C.COLOR.held, pet = C.COLOR.held, other = C.COLOR.loose },
+}
+
 local function percentText(player)
     if not player then return "" end
     return C.PERCENT_FORMAT:format(player.percent)
@@ -63,22 +87,25 @@ end
 
 -- Lo que hay que pintar en la barra de unit, o nil si no lleva nada:
 --   { color, text }    con la amenaza a la vista
---   { secret = true, tanking, petTanking, percent, hasPercent }
+--   { secret = true, scheme, tanking, petTanking, percent, hasPercent }
 --                      con la amenaza oculta, para ThreatBadge.ShowSecret
 local function display(unit)
     if not Threat.IsEnabled() or not Api.CanAttack(unit) then return nil end
     local player, pet = Api.Threat("player", unit), Api.Threat("pet", unit)
     if not player and not pet then return nil end
+    local tank = ns.Role.IsTank()
     if raw(player, "secret", false) or raw(pet, "secret", false) then
         return {
             secret = true,
+            scheme = tank and SCHEMES.tank or SCHEMES.normal,
             tanking = raw(player, "tanking", false),
             petTanking = raw(pet, "tanking", false),
             percent = raw(player, "percent", 0),
             hasPercent = player ~= nil,
         }
     end
-    return { color = C.COLOR[situation(player, pet)], text = percentText(player) }
+    local key = tank and tankSituation(player, pet) or situation(player, pet)
+    return { color = C.COLOR[key], text = percentText(player) }
 end
 
 --------------------------------------------------------------------------------
@@ -97,7 +124,7 @@ local function onSecretFailure(reason)
 end
 
 local function showSecret(plate, look)
-    local ok, reason = pcall(ns.ThreatBadge.ShowSecret, plate, look)
+    local ok, reason = pcall(ns.ThreatBadge.ShowSecret, plate, look, look.scheme)
     if ok then return end
     ns.ThreatBadge.Hide(plate)
     onSecretFailure(reason)
@@ -132,10 +159,13 @@ end)
 -- Los de amenaza llegan sin parar en combate y no siempre con el token de la
 -- barra (a veces "target"): se agrupan y se repasan todas. Al entrar o salir
 -- de combate y al cambiar de mascota, lo mismo.
+-- Al cambiar los roles del grupo o la casilla "Tanqueo yo", cambian los colores.
 for _, event in ipairs({ "UNIT_THREAT_LIST_UPDATE", "UNIT_THREAT_SITUATION_UPDATE",
-                         "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UNIT_PET" }) do
+                         "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UNIT_PET",
+                         "GROUP_ROSTER_UPDATE", "PLAYER_ROLES_ASSIGNED" }) do
     Util.On(event, updateSoon)
 end
+Util.Listen(Const.MSG.SETTINGS_CHANGED, updateSoon)
 
 --------------------------------------------------------------------------------
 -- API del módulo
@@ -166,6 +196,7 @@ local function statusLines(unit)
     local badge = plate and ns.ThreatBadge.Get(plate)
     return {
         ("aviso: %s"):format(Threat.IsEnabled() and "encendido" or "apagado (/fran agro)"),
+        ("colores: %s"):format(ns.Role.IsTank() and "de tanque (verde, va a por ti; rojo, se te escapa)" or "normales"),
         ("el juego da la amenaza: %s"):format(yesNo(Api.HasThreat())),
         ("objetivo: %s, enemigo: %s"):format(tostring(Api.UnitName(unit)), yesNo(Api.CanAttack(unit))),
         ("barra de nombre: %s"):format(plate and "sí" or "no (¿están a la vista? tecla V)"),

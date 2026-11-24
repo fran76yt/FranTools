@@ -13,7 +13,7 @@
 Addon de **World of Warcraft: Forever** con pequeñas ayudas para el día a día:
 
 - **Avisos del cazador:** el taunt de la mascota mal puesto, la munición que se acaba y pelear sin el aspecto que toca.
-- **Avisos del guerrero:** Grito de guerra caído.
+- **Ayudas del guerrero:** Grito de guerra caído y, para el tanque, Revancha lista, el enfriamiento de Provocar y los colores de tanque del agro.
 - **Avisos del brujo:** pocos fragmentos de alma, sin piedra de salud, sin armadura y el taunt del abisario mal puesto.
 - **Avisos del paladín:** sin aura, sin bendición y Furia justa cuando no toca.
 - **Vendedor:** al abrirlo, vende la basura y repara el equipo.
@@ -70,6 +70,9 @@ El nombre de la carpeta tiene que coincidir con el del `.toc`. En la pantalla de
 | `/fran agro` | Apaga o enciende el agro en las barras de nombre |
 | `/fran agro estado` | Con un enemigo seleccionado, repasa paso a paso por qué se ve o no el agro (ver [Agro en las barras de nombre](#agro-en-las-barras-de-nombre)) |
 | `/fran grito` | Guerrero: apaga o enciende el aviso de Grito de guerra |
+| `/fran revancha` | Guerrero: apaga o enciende el aviso de Revancha |
+| `/fran provocar` | Guerrero: apaga o enciende el enfriamiento de Provocar |
+| `/fran iconos` | Todos los avisos solo con el icono, sin texto, o con texto otra vez |
 | `/fran fragmentos` | Brujo: apaga o enciende el aviso de fragmentos de alma |
 | `/fran piedra` | Brujo: apaga o enciende el aviso de piedra de salud |
 | `/fran armadura` | Brujo: apaga o enciende el aviso de armadura |
@@ -95,21 +98,24 @@ Un botón con una llave inglesa en el borde del minimapa:
 
 A la izquierda, una **barra lateral** para elegir la página; la elegida se marca en dorado:
 
-- **General:** para todas las clases: reparar y vender la basura al abrir un vendedor, y el agro en las barras de nombre.
+- **General:** para todas las clases: reparar y vender la basura al abrir un vendedor, el agro en las barras de nombre y cómo se ven los recuadros de aviso (solo el icono y su tamaño).
 - **La sección de tu clase**, bajo su nombre en el color de la clase. Cada personaje ve solo la de su clase. Un clic en el nombre del grupo lo pliega o lo despliega, y se recuerda.
   - **Cazador:** Mascota (aviso del taunt), Munición (aviso y umbrales por tipo de arma) y Aspectos (aviso y qué aspectos valen).
-  - **Guerrero:** Gritos (aviso de Grito de guerra).
+  - **Guerrero:** Gritos (aviso de Grito de guerra) y Tanque (casilla Tanqueo yo, Revancha y Provocar).
   - **Brujo:** Mascota (taunt del abisario), Reactivos (fragmentos de alma con sus umbrales y piedra de salud) y Armadura.
   - **Paladín:** Aura (aviso y qué auras valen), Bendición y Furia justa.
 
-Las notas largas de una página ocupan lo que necesitan y empujan hacia abajo lo que va detrás.
+Las notas largas de una página ocupan lo que necesitan y empujan hacia abajo lo que va detrás, y la ventana crece si alguna página no cabe.
 
 ### Recuadros de aviso
 
-Casi todos los avisos son un recuadro pequeño con un icono y una línea de texto: borde **ámbar** para avisar y **rojo** cuando es más urgente. No suenan ni ocupan el centro de la pantalla, y desaparecen solos en cuanto se arregla lo que avisan.
+Casi todos los avisos son un recuadro pequeño con un icono y una línea de texto: borde **ámbar** para avisar, **rojo** cuando es más urgente y **verde** para algo que ya puedes usar (Revancha, Provocar listo). No suenan ni ocupan el centro de la pantalla, y desaparecen solos en cuanto se arregla lo que avisan.
 
 - **Arrástralos** a donde te molesten menos; la posición de cada uno se guarda por personaje.
 - Los que no has movido se **apilan** uno debajo de otro por debajo del centro de la pantalla, solo los que están a la vista, para que varios avisos a la vez no se tapen.
+- **Solo el icono:** en **General › Recuadros de aviso** (o con `/fran iconos`) todos pasan a ser un icono cuadrado, sin texto, con el borde del mismo color. Lo que dice cada uno sale al pasar el ratón.
+- **Tamaño del icono:** en la misma sección, de 16 a 64 píxeles; vale para los dos modos.
+- Lo que tiene una cuenta atrás (Provocar) la enseña con una cifra encima del icono, y el icono se ve apagado hasta que está listo.
 
 Pasa el ratón por encima de cada opción para ver qué hace.
 
@@ -174,9 +180,17 @@ Los IDs de todos los rangos están en `Const.ASPECT` ([`Core/Constants.lua`](Cor
 
 **En combate**, el cliente de Forever oculta a los addons la lista de beneficios (comprobado en el juego: es un «valor secreto» y pedirla da un error). Entonces el addon usa lo último que supo: lo que leyó antes de empezar la pelea y lo que **lances tú** durante ella (el juego sí cuenta qué hechizos lanzas). Así, si entras en combate sin el beneficio, el aviso sale, y se quita en cuanto te lo pones. Preguntar hechizo a hechizo solo sirve para confirmar que lo llevas, porque con los datos ocultos el juego contesta «no» aunque lo lleves. Lo que no puede saber es si se te cae a mitad de pelea, ni un beneficio que te ponga otro jugador en combate. Vale para todos los avisos de beneficios: aspecto, Grito de guerra, armadura, aura, bendición y Furia justa.
 
-### Guerrero: Grito de guerra
+### Guerrero
 
-Recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango, también el de otro guerrero del grupo. Por defecto **solo en combate**; con la casilla desmarcada avisa siempre. Se configura en **Guerrero › Gritos** o con `/fran grito`.
+- **Grito de guerra:** recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango, también el de otro guerrero del grupo. Por defecto **solo en combate**; con la casilla desmarcada avisa siempre. Se configura en **Guerrero › Gritos** o con `/fran grito`.
+
+Para el **tanque** (protección), en **Guerrero › Tanque**:
+
+- **Tanqueo yo:** marca que tanqueas, para cuando el juego no sabe tu rol (si el grupo tiene roles puestos, manda el rol). Cambia los colores del agro en las barras de nombre: **verde** si va a por ti, **ámbar** si va a por ti pero otro está a punto de quitártelo, **rojo** si se te ha escapado. Es la misma casilla que la del paladín.
+- **Revancha:** icono verde mientras puedes usarla, tras bloquear, esquivar o parar. Dura poco y es lo que más amenaza da por ira. Con el icono del rango más alto que sabes. Solo en combate. `/fran revancha`.
+- **Provocar:** icono verde «Provocar listo» y, al usarlo, apagado con los segundos que le quedan encima. En Forever son **8 s** (comprobado en Wowhead Forever), o 7 y 6 con el talento Provocar mejorado. Por defecto solo en combate. `/fran provocar`.
+
+En combate el cliente de Forever oculta los enfriamientos a los addons, y su reloj de enfriamiento no acepta valores ocultos de un addon. Por eso la cuenta de Provocar es propia: empieza al lanzarlo (eso el juego sí lo cuenta) con lo que dura según tus talentos, y si el juego da el enfriamiento de verdad, manda el suyo. Lo que el juego no oculta es si un hechizo se puede usar, y de ahí sale el aviso de Revancha.
 
 ### Brujo
 
@@ -189,7 +203,7 @@ Recuadro ámbar «Sin Grito de guerra» si no lo llevas. Cuenta cualquier rango,
 
 - **Aura:** como los aspectos del cazador. Recuadro ámbar «Sin aura» si no llevas ninguna de las marcadas y rojo («Aura: Devoción») si llevas una sin marcar. Por defecto valen todas; se eligen en **Paladín › Aura**, con una casilla con icono por aura. Por defecto solo en combate. `/fran aura`.
 - **Bendición:** recuadro ámbar «Sin bendición» si no llevas ninguna; vale la de cualquier paladín, normal o superior. Por defecto solo en combate. `/fran bendicion`.
-- **Furia justa:** solo en grupo. Si tanqueas y no la llevas, recuadro ámbar «Sin Furia justa»; si la llevas sin tanquear (le robarías los enemigos al tanque), rojo «Furia justa: quítala». Quién tanquea lo dice el rol del grupo si está puesto; si no, la casilla **Tanqueo yo** de **Paladín › Furia justa**. `/fran furia`.
+- **Furia justa:** solo en grupo. Si tanqueas y no la llevas, recuadro ámbar «Sin Furia justa»; si la llevas sin tanquear (le robarías los enemigos al tanque), rojo «Furia justa: quítala». Quién tanquea lo dice el rol del grupo si está puesto; si no, la casilla **Tanqueo yo** de **Paladín › Furia justa** (la misma que la del guerrero). `/fran furia`.
 
 Sin verificar en Forever: que su cliente tenga roles de grupo (`UnitGroupRolesAssigned`); si no, manda la casilla. Wowhead Forever no tiene las bendiciones de Salvación, Luz y Santuario: sus IDs están en la lista igualmente, por si el juego las tiene.
 
@@ -218,6 +232,7 @@ Para cualquier clase. En la barra de nombre de cada enemigo con el que estáis e
 | Gris | Otro (el tanque del grupo) |
 
 - El ámbar va por delante del verde: si dejas tanquear a la mascota, te avisa antes de quitárselo.
+- **Si tanqueas** (rol de tanque en el grupo, o la casilla **Tanqueo yo** de tu clase), lo que alarma es lo contrario: **verde** si va a por ti, **ámbar** si va a por ti pero otro está a punto de quitártelo y **rojo** si se te ha escapado. Con la amenaza oculta, solo verde o rojo (el ámbar del tanque necesitaría leerla).
 - Si solo la mascota está en combate con el enemigo, el marco sale sin porcentaje.
 - No cambia la barra de vida en sí (el juego la volvería a pintar con su color); el marco va por fuera.
 - Se apaga o enciende en **General** de `/fran config`, o con `/fran agro`. Viene encendido.
@@ -248,21 +263,24 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`Core/ErrorLog.lua`](Core/ErrorLog.lua) | *Compartido.* Registro de errores: se pone delante del manejador de errores del juego, apunta los de este addon en una variable de la cuenta (sin repetir, con contador y como mucho 50) y los muestra con `/fran errores` |
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
+| [`Core/Role.lua`](Core/Role.lua) | Quién tanquea: el rol del grupo o la casilla Tanqueo yo, la misma para todas las clases |
 | [`Core/Buffs.lua`](Core/Buffs.lua) | Reconoce qué beneficio de una lista lleva el jugador (por ID o por nombre) y si sabe lanzarlo |
 | [`Core/Thresholds.lua`](Core/Thresholds.lua) | Umbrales ámbar y rojo que cambia el jugador, y el nivel y texto del aviso para una cantidad |
 | [`Features/BuffWarning.lua`](Features/BuffWarning.lua) | Motor de los avisos «no llevas X puesto»: cada uno es una descripción (aspecto, Grito de guerra, armadura, aura, bendición) |
 | [`Features/CountWarning.lua`](Features/CountWarning.lua) | Motor de los avisos «te quedan pocos X» (fragmentos de alma, piedra de salud) |
+| [`Features/ReadyWarning.lua`](Features/ReadyWarning.lua) | Motor de los avisos «ya puedes usarlo» (Revancha) |
+| [`Features/CooldownWarning.lua`](Features/CooldownWarning.lua) | Motor de los avisos de enfriamiento con su propia cuenta atrás (Provocar) |
 | [`Features/PetTaunt.lua`](Features/PetTaunt.lua) | Aviso del taunt de la mascota (Bramido, Tormento) |
 | [`Features/Ammo.lua`](Features/Ammo.lua) | Aviso de munición baja |
 | [`Features/Aspect.lua`](Features/Aspect.lua) | Aviso de aspecto (cazador) |
-| [`Features/Warrior.lua`](Features/Warrior.lua) | Aviso de Grito de guerra |
+| [`Features/Warrior.lua`](Features/Warrior.lua) | Avisos del guerrero: Grito de guerra, Revancha y Provocar |
 | [`Features/Warlock.lua`](Features/Warlock.lua) | Avisos de fragmentos de alma, piedra de salud y armadura |
 | [`Features/Paladin.lua`](Features/Paladin.lua) | Avisos de aura y bendición |
 | [`Features/RighteousFury.lua`](Features/RighteousFury.lua) | Aviso de Furia justa, según si tanqueas |
 | [`Features/Merchant.lua`](Features/Merchant.lua) | Al abrir un vendedor: vende la basura en tandas y después repara |
 | [`Features/Threat.lua`](Features/Threat.lua) | Agro en las barras de nombre: decide el color y el porcentaje de cada enemigo, o se los pasa sin mirar al marco si el juego los oculta |
 | [`UI/Tooltip.lua`](UI/Tooltip.lua) | *Compartido.* Tooltips de ayuda (título y líneas en gris) |
-| [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda; los no movidos se apilan |
+| [`UI/NoticeBox.lua`](UI/NoticeBox.lua) | Recuadro de aviso discreto: icono, texto, borde del color del nivel y posición movible que se guarda; los no movidos se apilan. Modo solo icono, tamaño del icono y una cifra encima (cuenta atrás) |
 | [`UI/ThreatBadge.lua`](UI/ThreatBadge.lua) | Marco de color y texto alrededor de la barra de vida de una barra de nombre, sin tocar la barra |
 | [`UI/Checkbox.lua`](UI/Checkbox.lua) | Casilla: lee y escribe su estado con funciones del módulo que la usa |
 | [`UI/NumberBox.lua`](UI/NumberBox.lua) | Caja numérica: aplica con Intro o al salir, descarta con Escape |
@@ -272,7 +290,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`UI/GeneralPage.lua`](UI/GeneralPage.lua) | Página **General**, solo como filas de datos |
 | [`UI/ClassPages/ClassPages.lua`](UI/ClassPages/ClassPages.lua) | Registro de secciones por clase |
 | [`UI/ClassPages/Hunter.lua`](UI/ClassPages/Hunter.lua) | Sección **Cazador**: páginas Mascota, Munición y Aspectos |
-| [`UI/ClassPages/Warrior.lua`](UI/ClassPages/Warrior.lua) | Sección **Guerrero**: página Gritos |
+| [`UI/ClassPages/Warrior.lua`](UI/ClassPages/Warrior.lua) | Sección **Guerrero**: páginas Gritos y Tanque |
 | [`UI/ClassPages/Warlock.lua`](UI/ClassPages/Warlock.lua) | Sección **Brujo**: páginas Mascota, Reactivos y Armadura |
 | [`UI/ClassPages/Paladin.lua`](UI/ClassPages/Paladin.lua) | Sección **Paladín**: páginas Aura, Bendición y Furia justa |
 | [`UI/ConfigWindow.lua`](UI/ConfigWindow.lua) | La ventana `/fran config` |
@@ -342,7 +360,9 @@ FranToolsChar = {
     ["threat"] = { ["off"] = true },
     ["shards"] = { ["thresholds"] = { ["count"] = { ["low"] = 8 } } },
     ["aura"] = { ["chosen"] = { ["retribution"] = false } },
-    ["righteousFury"] = { ["tank"] = true },      -- casilla Tanqueo yo
+    ["role"] = { ["tank"] = true },               -- casilla Tanqueo yo
+    ["taunt"] = { ["point"] = { "CENTER", "CENTER", 220, -40 } },   -- icono de Provocar movido
+    ["notices"] = { ["iconOnly"] = true, ["iconSize"] = 36 },     -- solo el icono, más grande
 }
 ```
 
@@ -423,18 +443,21 @@ FranTools/
 │   ├── ErrorLog.lua                   registro de errores de Lua (compartido)
 │   ├── Storage.lua                    SavedVariables
 │   ├── Migration.lua                  opciones traídas de StreamDeckWoW
+│   ├── Role.lua                       quién tanquea
 │   ├── Buffs.lua                      beneficios que lleva el jugador
 │   ├── Thresholds.lua                 umbrales de aviso
 │   └── Commands.lua                   comandos /fran
 ├── Features/
 │   ├── BuffWarning.lua                motor de avisos de beneficio
 │   ├── CountWarning.lua               motor de avisos por cantidad
+│   ├── ReadyWarning.lua               motor de avisos «ya puedes usarlo»
+│   ├── CooldownWarning.lua            motor de avisos de enfriamiento
 │   ├── PetTaunt.lua                   aviso del taunt de la mascota
 │   ├── Merchant.lua                   reparar y vender la basura
 │   ├── Threat.lua                     agro en las barras de nombre
 │   ├── Ammo.lua                       cazador: munición baja
 │   ├── Aspect.lua                     cazador: aspecto
-│   ├── Warrior.lua                    guerrero: Grito de guerra
+│   ├── Warrior.lua                    guerrero: Grito de guerra, Revancha, Provocar
 │   ├── Warlock.lua                    brujo: fragmentos, piedra de salud, armadura
 │   ├── Paladin.lua                    paladín: aura, bendición
 │   └── RighteousFury.lua              paladín: Furia justa

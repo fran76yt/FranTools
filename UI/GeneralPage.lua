@@ -45,9 +45,38 @@ ns.GeneralPage = {
                 "Un marco de color alrededor de la barra de vida y tu amenaza al lado:",
                 "rojo, va a por ti; ámbar, estás a punto de quitarle el agro a quien lo tiene;",
                 "verde, lo tiene tu mascota; gris, lo tiene otro. También con /fran agro.",
+                "Si tanqueas (casilla Tanqueo yo o rol del grupo): verde, va a por ti;",
+                "ámbar, te lo van a quitar; rojo, se te ha escapado.",
             },
             get = function() return ns.Threat.IsEnabled() end,
             set = function(on) ns.Threat.SetEnabled(on) end,
         },
+        { kind = "header", label = "Recuadros de aviso" },
+        {
+            kind = "check",
+            label = "Solo el icono, sin texto",
+            tooltip = {
+                "Solo el icono",
+                "Todos los avisos (Revancha, Provocar, aspecto, munición...) como un icono",
+                "cuadrado, sin texto. Al pasar el ratón se explica. También con /fran iconos.",
+            },
+            get = function() return ns.NoticeBox.IsIconOnly() end,
+            set = function(on) ns.NoticeBox.SetIconOnly(on) end,
+        },
+        {
+            kind = "numbers",
+            label = "Tamaño del icono",
+            tooltip = {
+                "Tamaño del icono",
+                ("En píxeles, de %d a %d. Intro para aplicar."):format(ns.Const.NOTICE.ICON_SIZE_MIN, ns.Const.NOTICE.ICON_SIZE_MAX),
+            },
+            fields = {
+                {
+                    get = function() return ns.NoticeBox.IconSize() end,
+                    set = function(size) ns.NoticeBox.SetIconSize(size) end,
+                },
+            },
+        },
+        { kind = "note", text = "Los recuadros se mueven arrastrándolos y cada uno recuerda su sitio." },
     },
 }

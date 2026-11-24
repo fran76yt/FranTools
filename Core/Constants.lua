@@ -52,7 +52,8 @@ Const.UI = {
     TITLE = "FranTools",
     TITLE_ICON_SIZE = 16,
     TITLE_ICON_GAP = 4,     -- separación entre el icono y el texto del título
-    HEIGHT = 250,
+    HEIGHT = 250,           -- alto mínimo: crece si una página necesita más
+    BOTTOM_MARGIN = 14,     -- aire bajo la última fila de la página más alta
     CONTENT_WIDTH = 374,    -- ancho de las páginas, a la derecha de la barra lateral
     PADDING = 20,
     -- Páginas de opciones: filas de arriba abajo.
@@ -189,6 +190,27 @@ Const.COUNT_CHECK_DELAY = 0.5
 -- Grito de batalla se llama "Grito de guerra".
 Const.WARRIOR = {
     BATTLE_SHOUT = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
+    -- Revancha, del rango 1 al 6: solo se puede usar tras bloquear, esquivar
+    -- o parar, y un rato. El juego dice cuándo (Features/ReadyWarning.lua).
+    REVENGE = { 6572, 6574, 7379, 11600, 11601, 25288 },
+    TAUNT = { 355 },
+    -- Enfriamiento de Provocar en Forever: 8 s, y menos con el talento
+    -- Provocar mejorado (rango 2 primero: manda el que más rebaja).
+    TAUNT_COOLDOWN = 8,
+    TAUNT_TALENTS = { { spell = 12765, seconds = 6 }, { spell = 12302, seconds = 7 } },
+}
+
+-- Quién tanquea (Core/Role.lua): el rol del buscador de grupo, si lo hay.
+Const.TANK_ROLE = "TANK"
+
+-- Avisos de "ya puedes usarlo" (Features/ReadyWarning.lua): las ráfagas de
+-- SPELL_UPDATE_USABLE se agrupan.
+Const.READY_CHECK_DELAY = 0.1
+
+-- Avisos de enfriamiento (Features/CooldownWarning.lua).
+Const.COOLDOWN = {
+    TICK = 0.2,          -- cada cuánto se pone al día la cuenta atrás
+    GCD = 1.5,           -- un enfriamiento así de corto es el global, no el suyo
 }
 
 -- Brujo (Features/Warlock.lua). IDs según Wowhead Forever.
@@ -238,7 +260,6 @@ Const.PALADIN = {
     -- Furia justa (Righteous Fury): más amenaza con el daño sagrado. La lleva
     -- el tanque; el resto se la quita para no robarle los enemigos.
     RIGHTEOUS_FURY = 25780,
-    TANK_ROLE = "TANK",      -- rol del buscador de grupo (UnitGroupRolesAssigned)
     CHECK_DELAY = 0.5,
 }
 
@@ -266,6 +287,11 @@ Const.THREAT = {
         warning = { 1, 0.75, 0 },
         pet = { 0.3, 0.9, 0.3 },
         other = { 0.6, 0.6, 0.6 },
+        -- Si tanqueas (Core/Role.lua) lo que alarma es lo contrario: el
+        -- enemigo que no va a por ti.
+        held = { 0.3, 0.9, 0.3 },     -- va a por ti (o tu mascota): bien
+        shaky = { 1, 0.75, 0 },       -- va a por ti, pero otro está a punto de quitártelo
+        loose = { 1, 0.25, 0.25 },    -- se te ha escapado: va a por otro
     },
     PERCENT_FORMAT = "%.0f%%",   -- el porcentaje, redondeado ("85%")
     -- Si el juego oculta la amenaza, el ámbar es una barra que se llena del
@@ -299,7 +325,14 @@ Const.NOTICE = {
     LEVEL_COLOR = {
         warning = { 1, 0.75, 0 },
         critical = { 1, 0.25, 0.25 },
+        ready = { 0.3, 1, 0.3 },      -- algo que ya puedes usar (Revancha)
     },
+    -- Modo solo icono (/fran iconos): un cuadrado con el icono, sin texto.
+    -- El tamaño del icono lo elige el jugador, en los dos modos.
+    ICON_SIZE_MIN = 16,
+    ICON_SIZE_MAX = 64,
+    BADGE_FONT = "NumberFontNormalLarge",   -- cifra encima del icono (segundos que quedan)
+    DIM_ALPHA = 0.6,                        -- icono de algo que aún no se puede usar
 }
 
 -- Registro de errores de Lua (Core/ErrorLog.lua, compartido).

@@ -11,6 +11,8 @@ clases, hechas una vez a partir del módulo del aviso:
                                         elemento de la lista (los que valen)
   Rows.Thresholds(module, label)        títulos Ámbar/Rojo y sus dos cajas
   Rows.PetTaunt()                       el aviso del taunt de la mascota
+  Rows.ManualTank()                     la casilla "Tanqueo yo" (Core/Role.lua),
+                                        la misma en todas las clases que tanquean
   Rows.Concat(...)                      une varias listas de filas en una
 
 "module" es un aviso creado con Features/BuffWarning.lua o
@@ -108,6 +110,21 @@ function Rows.PetTaunt()
         },
         get = function() return ns.PetTaunt.IsEnabled() end,
         set = function(on) ns.PetTaunt.SetEnabled(on) end,
+    }
+end
+
+function Rows.ManualTank()
+    return {
+        kind = "check",
+        label = "Tanqueo yo",
+        tooltip = {
+            "Tanqueo yo",
+            "Para cuando el juego no sabe tu rol en el grupo; si lo sabe, manda el rol.",
+            "Cambia los colores del agro en las barras de nombre (rojo: se te escapa)",
+            "y la Furia justa del paladín. Es la misma casilla en todas las clases.",
+        },
+        get = function() return ns.Role.IsManualTank() end,
+        set = function(on) ns.Role.SetManualTank(on) end,
     }
 end
 

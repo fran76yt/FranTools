@@ -49,17 +49,7 @@ local furyPage = {
             "Ámbar: tanqueas y no la llevas. Rojo: la llevas sin tanquear.",
             "Solo en grupo. También con /fran furia.",
         }),
-        {
-            kind = "check",
-            label = "Tanqueo yo",
-            tooltip = {
-                "Tanqueo yo",
-                "Para cuando el juego no sabe tu rol en el grupo.",
-                "Si el grupo tiene roles puestos, manda el rol.",
-            },
-            get = function() return ns.RighteousFury.IsManualTank() end,
-            set = function(on) ns.RighteousFury.SetManualTank(on) end,
-        },
+        Rows.ManualTank(),
         { kind = "note", text = "Quién tanquea lo dice el rol del grupo si está puesto; si no, esta casilla. Solo, no avisa." },
     },
 }

@@ -11,8 +11,7 @@ que no, para no robarle los enemigos al tanque. En grupo, un recuadro
   no tanqueas y la llevas      -> borde rojo, "Furia justa: quítala"
 
 Solo, no avisa: un paladín protección la lleva aunque no haya tanque. Quién
-tanquea lo dice el rol del grupo (el del buscador de grupo, si el cliente lo
-tiene y está puesto); si no, la casilla "Tanqueo yo" de la ventana.
+tanquea lo dice Core/Role.lua: el rol del grupo o la casilla "Tanqueo yo".
 ]]
 
 local _, ns = ...
@@ -27,28 +26,6 @@ local function settings()
 end
 
 local fury = ns.Buffs.List({ { key = "righteousFury", spells = { P.RIGHTEOUS_FURY } } })
-
---------------------------------------------------------------------------------
--- Preferencias
---------------------------------------------------------------------------------
-
--- Si el jugador ha dicho que tanquea (para cuando el juego no sabe su rol).
-function RighteousFury.IsManualTank()
-    return settings().tank == true
-end
-
-function RighteousFury.SetManualTank(on)
-    settings().tank = on or nil
-    RighteousFury.Check()
-    Util.Fire(Const.MSG.SETTINGS_CHANGED)
-end
-
--- El rol del grupo manda; sin rol, la casilla.
-function RighteousFury.IsTank()
-    local role = Api.GroupRole()
-    if role then return role == P.TANK_ROLE end
-    return RighteousFury.IsManualTank()
-end
 
 --------------------------------------------------------------------------------
 -- Aviso
@@ -66,7 +43,7 @@ local function notice()
     if Api.PlayerClass() ~= "PALADIN" then return nil end
     local wearing = fury:Current() ~= nil
     if not applies() then return nil end
-    local tank = RighteousFury.IsTank()
+    local tank = ns.Role.IsTank()
     if tank and not wearing then return "Sin Furia justa", "warning" end
     if wearing and not tank then return "Furia justa: quítala", "critical" end
 end
@@ -102,6 +79,8 @@ for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "GROUP_ROSTER_UPDATE", "PLAYER
                          "SPELLS_CHANGED", "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST" }) do
     Util.On(event, checkSoon)
 end
+-- Y al cambiar la casilla "Tanqueo yo" (Core/Role.lua).
+Util.Listen(Const.MSG.SETTINGS_CHANGED, checkSoon)
 
 --------------------------------------------------------------------------------
 -- API del módulo

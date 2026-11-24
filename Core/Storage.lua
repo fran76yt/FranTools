@@ -46,9 +46,17 @@ lo que el jugador ha cambiado:
              avisos por cantidad (Features/CountWarning.lua) del brujo: off,
              point y, los fragmentos, thresholds = { count = { low, critical } }
   righteousFury
-             aviso de Furia justa del paladín: off, point y
+             aviso de Furia justa del paladín: off y point
+  role       quién tanquea (Core/Role.lua):
                tank     true si el jugador ha dicho que tanquea (cuando el
-                        juego no sabe su rol)
+                        juego no sabe su rol). Antes estaba en righteousFury
+  revenge    aviso de Revancha del guerrero (Features/ReadyWarning.lua):
+             off y point
+  taunt      enfriamiento de Provocar del guerrero
+             (Features/CooldownWarning.lua): off, point y anytime
+  notices    todos los recuadros de aviso (UI/NoticeBox.lua):
+               iconOnly true si solo se ve el icono, sin texto
+               iconSize tamaño del icono en píxeles (nil -> el de siempre)
 ]]
 
 local _, ns = ...

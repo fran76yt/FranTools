@@ -17,9 +17,18 @@ solo los que están a la vista, para que varios avisos a la vez no se tapen.
       settings = function() return tabla end, -- donde guardar la posición (campo point)
       tooltip = { "Título", "Ayuda", ... },
   })
-  box:ShowNotice(icono, "texto", "warning")
-  box:ShowIf(icono, textoONil, nivel)   -- muestra si hay texto; si no, oculta
+  box:ShowNotice(icono, "texto", "warning", { badge = "7", dim = true })
+  box:ShowIf(icono, textoONil, nivel, extra)   -- muestra si hay texto; si no, oculta
   box:Hide()
+
+extra es opcional: badge, una cifra encima del icono (los segundos que le
+quedan a un enfriamiento); dim, el icono apagado (aún no se puede usar).
+
+Para todos los recuadros a la vez, el jugador elige (/fran config, General):
+  NoticeBox.IsIconOnly() / SetIconOnly(on) / ToggleIconOnly()
+      solo el icono, en un cuadrado, sin texto (el tooltip lo explica)
+  NoticeBox.IconSize() / SetIconSize(n)
+      tamaño del icono, en los dos modos
 
 Crearlo no toca la interfaz, así que se puede hacer al cargar el archivo.
 
@@ -28,13 +37,29 @@ consume nada.
 ]]
 
 local _, ns = ...
-local Const = ns.Const
+local Const, Util, Storage = ns.Const, ns.Util, ns.Storage
 local N = Const.NOTICE
 
 local NoticeBox = {}
 ns.NoticeBox = NoticeBox
 
 local boxes = {}   -- todos los recuadros, en el orden en que se crearon
+
+--------------------------------------------------------------------------------
+-- Preferencias de todos los recuadros
+--------------------------------------------------------------------------------
+
+local function prefs()
+    return Storage.Get("notices")
+end
+
+function NoticeBox.IsIconOnly()
+    return prefs().iconOnly == true
+end
+
+function NoticeBox.IconSize()
+    return prefs().iconSize or N.ICON_SIZE
+end
 
 --------------------------------------------------------------------------------
 -- Posición
@@ -56,10 +81,9 @@ local function restack()
     for _, box in ipairs(boxes) do
         local f = box.frame
         if f and f:IsShown() and not box.opts.settings().point then
-            local x, y = N.DEFAULT_POINT[2], N.DEFAULT_POINT[3] - slot * (N.HEIGHT + N.STACK_GAP)
             f:ClearAllPoints()
-            f:SetPoint(N.DEFAULT_POINT[1], UIParent, N.DEFAULT_POINT[1], x, y)
-            slot = slot + 1
+            f:SetPoint(N.DEFAULT_POINT[1], UIParent, N.DEFAULT_POINT[1], N.DEFAULT_POINT[2], N.DEFAULT_POINT[3] - slot)
+            slot = slot + f:GetHeight() + N.STACK_GAP
         end
     end
 end
@@ -104,22 +128,41 @@ end
 
 local function createContent(f)
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetSize(N.ICON_SIZE, N.ICON_SIZE)
-    f.icon:SetPoint("LEFT", N.PADDING, 0)
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.text:SetPoint("LEFT", f.icon, "RIGHT", N.PADDING, 0)
-    f.text:SetPoint("RIGHT", -N.PADDING, 0)
     f.text:SetJustifyH("LEFT")
+    f.badge = f:CreateFontString(nil, "OVERLAY", N.BADGE_FONT)
+    f.badge:SetPoint("CENTER", f.icon, "CENTER", 0, 0)
+end
+
+-- Medidas según el modo: con texto, el ancho fijo y el icono a la
+-- izquierda; solo icono, un cuadrado justo alrededor de él.
+local function applyLayout(f)
+    local size = NoticeBox.IconSize()
+    local square = size + 2 * N.PADDING
+    f.icon:SetSize(size, size)
+    f.icon:ClearAllPoints()
+    f.text:ClearAllPoints()
+    if NoticeBox.IsIconOnly() then
+        f:SetSize(square, square)
+        f.icon:SetPoint("CENTER", 0, 0)
+        f.text:Hide()
+    else
+        f:SetSize(N.WIDTH, math.max(N.HEIGHT, square))
+        f.icon:SetPoint("LEFT", N.PADDING, 0)
+        f.text:SetPoint("LEFT", f.icon, "RIGHT", N.PADDING, 0)
+        f.text:SetPoint("RIGHT", -N.PADDING, 0)
+        f.text:Show()
+    end
 end
 
 local function build(box)
     local opts = box.opts
     local f = CreateFrame("Frame", opts.name, UIParent, BACKDROP_TEMPLATE)
-    f:SetSize(N.WIDTH, N.HEIGHT)
     f:SetFrameStrata("MEDIUM")
     f.opts = opts
     applyBackdrop(f)
     createContent(f)
+    applyLayout(f)
     makeMovable(f, opts)
     ns.Tooltip.Attach(f, opts.tooltip, "ANCHOR_TOP")
     restorePoint(f, opts.settings())
@@ -133,10 +176,14 @@ end
 
 local methods = {}
 
-function methods:ShowNotice(icon, text, level)
+function methods:ShowNotice(icon, text, level, extra)
+    extra = extra or {}
     self.frame = self.frame or build(self)
     local f = self.frame
     f.icon:SetTexture(icon)
+    f.icon:SetDesaturated(extra.dim == true)
+    f.icon:SetAlpha(extra.dim and N.DIM_ALPHA or 1)
+    f.badge:SetText(extra.badge or "")
     f.text:SetText(text)
     local color = N.LEVEL_COLOR[level] or N.LEVEL_COLOR.warning
     if f.SetBackdropBorderColor then f:SetBackdropBorderColor(unpack(color)) end
@@ -147,9 +194,9 @@ end
 
 -- Muestra el aviso si hay texto y, si no, lo oculta: así quien lo usa no
 -- repite el "si hay aviso, mostrar; si no, ocultar".
-function methods:ShowIf(icon, text, level)
+function methods:ShowIf(icon, text, level, extra)
     if text then
-        self:ShowNotice(icon, text, level)
+        self:ShowNotice(icon, text, level, extra)
     else
         self:Hide()
     end
@@ -171,4 +218,35 @@ function NoticeBox.Create(opts)
     for name, fn in pairs(methods) do box[name] = fn end
     boxes[#boxes + 1] = box
     return box
+end
+
+--------------------------------------------------------------------------------
+-- Cambiar el modo o el tamaño
+--------------------------------------------------------------------------------
+
+-- Los recuadros ya hechos se rehacen a la medida nueva y se vuelven a apilar.
+local function relayoutAll()
+    for _, box in ipairs(boxes) do
+        if box.frame then applyLayout(box.frame) end
+    end
+    restack()
+    Util.Fire(Const.MSG.SETTINGS_CHANGED)
+end
+
+function NoticeBox.SetIconOnly(on)
+    prefs().iconOnly = on or nil
+    relayoutAll()
+end
+
+-- Devuelve true si queda en modo solo icono.
+function NoticeBox.ToggleIconOnly()
+    NoticeBox.SetIconOnly(not NoticeBox.IsIconOnly())
+    return NoticeBox.IsIconOnly()
+end
+
+-- Se ajusta a lo que cabe (ICON_SIZE_MIN..MAX); el de siempre no se guarda.
+function NoticeBox.SetIconSize(size)
+    size = math.max(N.ICON_SIZE_MIN, math.min(N.ICON_SIZE_MAX, math.floor(size)))
+    Util.SetOverride(prefs(), "iconSize", size, N.ICON_SIZE)
+    relayoutAll()
 end

@@ -38,7 +38,7 @@ local tankPage = {
         }),
         Rows.Switch(ns.TauntCooldown, "Provocar: mostrar el enfriamiento", {
             "Provocar",
-            "Un icono verde si está listo y, si no, los segundos que le quedan.",
+            "Al usarlo, un icono con los segundos que le quedan; se quita al estar listo.",
             "También con /fran provocar.",
         }),
         Rows.CombatOnly(ns.TauntCooldown),

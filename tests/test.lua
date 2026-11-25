@@ -680,23 +680,32 @@ known[6572], known[6574], spellnames[6574] = true, true, "Revancha"
 combat = true; step("PLAYER_REGEN_DISABLED")
 local function revengeText() return boxText("FranToolsRevengeNotice") end
 check(revengeText() == nil, "Revancha sin poder usarla: nada")
-usable[6574] = true; step("SPELL_UPDATE_USABLE")
+usable[6574] = true; step("ACTION_USABLE_CHANGED", {})
 local rv = _G.FranToolsRevengeNotice
 check(revengeText() == "Revancha" and rawget(rv.icon, "_tex") == 100000 + 6574 and rawget(rv.text, "_color")[2] == 1,
-      "tras esquivar: Revancha en verde, con el icono del rango más alto que sabes")
-usable[6574] = false; step("SPELL_UPDATE_USABLE")
-check(revengeText() == nil, "al pasar el momento se quita")
-SlashCmdList.FRANTOOLS("revancha")
-usable[6574] = true; step("SPELL_UPDATE_USABLE")
+      "tras esquivar (aviso de Forever, ACTION_USABLE_CHANGED): Revancha en verde, con el rango más alto que sabes")
+usable[6574] = false; runTimers()
+check(revengeText() == nil, "sin ningún aviso del juego, en combate se pregunta cada poco: se quita a tiempo")
+usable[6574] = true; runTimers()
+check(revengeText() == "Revancha", "y vuelve a salir a tiempo")
+SlashCmdList.FRANTOOLS("revancha"); runTimers()
 check(revengeText() == nil and FranToolsChar.revenge.off == true, "/fran revancha lo apaga")
 SlashCmdList.FRANTOOLS("revancha"); runTimers()
 check(revengeText() == "Revancha", "y lo vuelve a encender")
-usable[6574] = nil; step("SPELL_UPDATE_USABLE")
+usable[6574] = false
+fire("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", 6574)
+check(revengeText() == "Revancha", "si el juego la ilumina en las barras, sale al momento")
+usable[6574] = true
+fire("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", 6574); runTimers()
+check(revengeText() == nil, "y se va con la luz: si el juego la ilumina, su luz manda")
+fire("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", SECRET)
+check(true, "un ID de hechizo oculto en la luz no rompe nada")
+usable[6574] = nil
 
 known[355], spellnames[355] = true, "Provocar"
 local function tauntText() return boxText("FranToolsTauntNotice") end
 step("PLAYER_REGEN_DISABLED")
-check(tauntText() == "Provocar listo", "en combate: Provocar listo")
+check(tauntText() == nil, "Provocar sin usar: no se ve, aunque estés en combate")
 cooldownsSecret = true
 step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t1", 355)
 local tb = _G.FranToolsTauntNotice
@@ -705,7 +714,7 @@ check(tauntText() == "Provocar: 8 s" and rawget(tb.badge, "_text") == "8" and ra
 now = now + 3.5; runTimers()
 check(tauntText() == "Provocar: 5 s", "la cuenta atrás avanza")
 now = now + 5; runTimers()
-check(tauntText() == "Provocar listo" and rawget(tb.badge, "_text") == "" and rawget(tb.icon, "_desat") == false, "al acabar, listo otra vez")
+check(tauntText() == nil, "al estar listo se quita")
 known[12765] = true
 step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t2", 355)
 check(tauntText() == "Provocar: 6 s", "con Provocar mejorado: 6 s")
@@ -715,31 +724,34 @@ check(tauntText() == "Provocar: 7 s", "si el juego da el enfriamiento, manda el 
 now = now + 8; runTimers()
 cooldowns[355], known[12765] = nil, nil
 step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t3", 6673)
-check(tauntText() == "Provocar listo", "otro hechizo no cuenta")
+check(tauntText() == nil, "otro hechizo no cuenta")
 combat = false; step("PLAYER_REGEN_ENABLED")
+step("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-t4", 355)
 check(tauntText() == nil, "fuera de combate no se ve")
 ns.TauntCooldown.SetCombatOnly(false)
-check(tauntText() == "Provocar listo" and FranToolsChar.taunt.anytime == true, "si se pide, se ve siempre")
+check(tauntText() == "Provocar: 8 s" and FranToolsChar.taunt.anytime == true, "si se pide, también fuera de combate")
 
 -- recuadros solo con el icono, y su tamaño
 local N = ns.Const.NOTICE
-check(rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true, "con texto: el ancho de siempre")
+check(rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true and rawget(tb.icon, "_w") == N.ICON_SIZE, "con texto: el ancho y el icono de siempre")
 SlashCmdList.FRANTOOLS("iconos")
-local square = N.ICON_SIZE + 2 * N.PADDING
+local square = N.ICON_ONLY_SIZE + 2 * N.PADDING
 check(FranToolsChar.notices.iconOnly == true and rawget(tb, "_w") == square and rawget(tb, "_h") == square and rawget(tb.text, "_shown") == false,
-      "/fran iconos: solo el icono, en un cuadrado")
+      "/fran iconos: solo el icono, más grande, en un cuadrado")
 openPage(1)
-check(rawget(gcbs[4], "_checked") == true, "y se ve marcado en General")
-typeIn(iconSizeBox, "40")
-check(FranToolsChar.notices.iconSize == 40 and rawget(tb.icon, "_w") == 40 and rawget(tb, "_w") == 40 + 2 * N.PADDING, "tamaño del icono, desde General")
+check(rawget(gcbs[4], "_checked") == true and rawget(iconSizeBox, "_text") == tostring(N.ICON_ONLY_SIZE), "y se ve marcado en General, con su tamaño")
+typeIn(iconSizeBox, "48")
+check(FranToolsChar.notices.iconSize == 48 and rawget(tb.icon, "_w") == 48 and rawget(tb, "_w") == 48 + 2 * N.PADDING, "tamaño del icono, desde General")
 typeIn(iconSizeBox, "500")
 check(FranToolsChar.notices.iconSize == N.ICON_SIZE_MAX, "sin pasar del máximo")
-typeIn(iconSizeBox, tostring(N.ICON_SIZE))
-check(FranToolsChar.notices.iconSize == nil, "el de siempre no se guarda")
+typeIn(iconSizeBox, tostring(N.ICON_ONLY_SIZE))
+check(FranToolsChar.notices.iconSize == nil, "el de entrada no se guarda")
 click(gcbs[4], false)
-check(FranToolsChar.notices.iconOnly == nil and rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true, "al desmarcarlo vuelve el texto")
+check(FranToolsChar.notices.iconOnly == nil and rawget(tb, "_w") == N.WIDTH and rawget(tb.text, "_shown") == true and rawget(tb.icon, "_w") == N.ICON_SIZE,
+      "al desmarcarlo vuelve el texto, con el icono de siempre")
 ns.TauntCooldown.SetCombatOnly(true)
 check(FranToolsChar.taunt.anytime == nil and tauntText() == nil, "solo en combate otra vez")
+now = now + 10; runTimers()
 check(rawget(_G.FranToolsConfig, "_h") > ns.Const.UI.HEIGHT, "la ventana de opciones crece para que quepa la página más alta")
 printed = {}
 SlashCmdList.FRANTOOLS("ayuda")

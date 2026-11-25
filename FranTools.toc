@@ -50,6 +50,7 @@ Libs\FranLib\MinimapButton.lua
 Core\Storage.lua
 Core\Migration.lua
 Core\Role.lua
+Core\SpellGlow.lua
 #   Piezas de lógica comunes: beneficios del jugador y umbrales de aviso
 Core\Buffs.lua
 Core\Thresholds.lua

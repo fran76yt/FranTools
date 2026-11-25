@@ -6,7 +6,8 @@ Ayudas del guerrero
                     Lo cuenta también el de otro guerrero del grupo.
   Revancha          recuadro verde mientras se puede usar, tras bloquear,
                     esquivar o parar (Features/ReadyWarning.lua).
-  Provocar          recuadro con lo que le queda de enfriamiento, o "listo"
+  Provocar          recuadro con lo que le queda de enfriamiento, desde que
+                    lo usas hasta que vuelve a estar listo
                     (Features/CooldownWarning.lua).
 
 Para el tanque también cuentan los colores de tanque del agro en las barras
@@ -55,7 +56,7 @@ ns.TauntCooldown = ns.CooldownWarning.Create({
     talents = W.TAUNT_TALENTS,
     tooltip = {
         "Provocar",
-        "Verde: listo. Apagado con una cifra: los segundos que le quedan.",
+        "Los segundos que le quedan desde que lo usaste. Al estar listo, se quita.",
         MOVE_HINT,
     },
 })

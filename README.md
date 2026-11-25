@@ -110,13 +110,13 @@ Las notas largas de una página ocupan lo que necesitan y empujan hacia abajo lo
 
 ### Recuadros de aviso
 
-Casi todos los avisos son un recuadro pequeño con un icono y una línea de texto: borde **ámbar** para avisar, **rojo** cuando es más urgente y **verde** para algo que ya puedes usar (Revancha, Provocar listo). No suenan ni ocupan el centro de la pantalla, y desaparecen solos en cuanto se arregla lo que avisan.
+Casi todos los avisos son un recuadro pequeño con un icono y una línea de texto: borde **ámbar** para avisar, **rojo** cuando es más urgente y **verde** para algo que ya puedes usar (Revancha). No suenan ni ocupan el centro de la pantalla, y desaparecen solos en cuanto se arregla lo que avisan.
 
 - **Arrástralos** a donde te molesten menos; la posición de cada uno se guarda por personaje.
 - Los que no has movido se **apilan** uno debajo de otro por debajo del centro de la pantalla, solo los que están a la vista, para que varios avisos a la vez no se tapen.
 - **Solo el icono:** en **General › Recuadros de aviso** (o con `/fran iconos`) todos pasan a ser un icono cuadrado, sin texto, con el borde del mismo color. Lo que dice cada uno sale al pasar el ratón.
-- **Tamaño del icono:** en la misma sección, de 16 a 64 píxeles; vale para los dos modos.
-- Lo que tiene una cuenta atrás (Provocar) la enseña con una cifra encima del icono, y el icono se ve apagado hasta que está listo.
+- **Tamaño del icono:** en la misma sección, de 16 a 64 píxeles; vale para los dos modos. Sin tocarlo, 24 con texto y 40 solo con el icono, que es lo único que se ve.
+- Lo que tiene una cuenta atrás (Provocar) la enseña con una cifra encima del icono apagado, y se quita al estar listo.
 
 Pasa el ratón por encima de cada opción para ver qué hace.
 
@@ -189,7 +189,9 @@ Para el **tanque** (protección), en **Guerrero › Tanque**:
 
 - **Tanqueo yo:** marca que tanqueas, para cuando el juego no sabe tu rol (si el grupo tiene roles puestos, manda el rol). Cambia los colores del agro en las barras de nombre: **verde** si va a por ti, **ámbar** si va a por ti pero otro está a punto de quitártelo, **rojo** si se te ha escapado. Es la misma casilla que la del paladín.
 - **Revancha:** icono verde mientras puedes usarla, tras bloquear, esquivar o parar. Dura poco y es lo que más amenaza da por ira. Con el icono del rango más alto que sabes. Solo en combate. `/fran revancha`.
-- **Provocar:** icono verde «Provocar listo» y, al usarlo, apagado con los segundos que le quedan encima. En Forever son **8 s** (comprobado en Wowhead Forever), o 7 y 6 con el talento Provocar mejorado. Por defecto solo en combate. `/fran provocar`.
+  - Si el juego ilumina Revancha en tus barras de acción, el icono sale y se va con esa luz, justo cuando toca.
+  - Si no, se pregunta al juego si se puede lanzar: al cambiar (el aviso de Forever, `ACTION_USABLE_CHANGED`, solo llega por lo que está en las barras) y, en combate, cada cuarto de segundo, para no llegar tarde.
+- **Provocar:** al usarlo, su icono apagado con los segundos que le quedan encima; al estar listo se quita. En Forever son **8 s** (comprobado en Wowhead Forever), o 7 y 6 con el talento Provocar mejorado. Por defecto solo en combate. `/fran provocar`.
 
 En combate el cliente de Forever oculta los enfriamientos a los addons, y su reloj de enfriamiento no acepta valores ocultos de un addon. Por eso la cuenta de Provocar es propia: empieza al lanzarlo (eso el juego sí lo cuenta) con lo que dura según tus talentos, y si el juego da el enfriamiento de verdad, manda el suyo. Lo que el juego no oculta es si un hechizo se puede usar, y de ahí sale el aviso de Revancha.
 
@@ -272,6 +274,7 @@ Todos los archivos del addon reciben la misma tabla privada (`local _, ns = ...`
 | [`Core/Storage.lua`](Core/Storage.lua) | Único módulo que toca la variable guardada `FranToolsChar` |
 | [`Core/Migration.lua`](Core/Migration.lua) | Trae, una vez, las opciones que había en StreamDeckWoW |
 | [`Core/Role.lua`](Core/Role.lua) | Quién tanquea: el rol del grupo o la casilla Tanqueo yo, la misma para todas las clases |
+| [`Core/SpellGlow.lua`](Core/SpellGlow.lua) | Qué hechizos ilumina el juego en las barras de acción (los que se pueden usar por algo que acaba de pasar) |
 | [`Core/Buffs.lua`](Core/Buffs.lua) | Reconoce qué beneficio de una lista lleva el jugador (por ID o por nombre) y si sabe lanzarlo |
 | [`Core/Thresholds.lua`](Core/Thresholds.lua) | Umbrales ámbar y rojo que cambia el jugador, y el nivel y texto del aviso para una cantidad |
 | [`Features/BuffWarning.lua`](Features/BuffWarning.lua) | Motor de los avisos «no llevas X puesto»: cada uno es una descripción (aspecto, Grito de guerra, armadura, aura, bendición) |
@@ -444,6 +447,7 @@ FranTools/
 │   ├── Storage.lua                    SavedVariables
 │   ├── Migration.lua                  opciones traídas de StreamDeckWoW
 │   ├── Role.lua                       quién tanquea
+│   ├── SpellGlow.lua                  hechizos que ilumina el juego
 │   ├── Buffs.lua                      beneficios que lleva el jugador
 │   ├── Thresholds.lua                 umbrales de aviso
 │   └── Commands.lua                   comandos /fran

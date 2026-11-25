@@ -18,10 +18,9 @@ uno es una descripción:
       tooltip = { ... },
   })
 
-Un recuadro (UI/NoticeBox.lua) con su icono:
-
-  listo           borde verde, "Provocar listo"
-  en enfriamiento icono apagado con los segundos encima, "Provocar: 5 s"
+Desde que lo usas hasta que vuelve a estar listo, un recuadro
+(UI/NoticeBox.lua) con su icono apagado y los segundos que le quedan encima,
+"Provocar: 5 s". Listo, no se ve: así solo aparece cuando hay algo que saber.
 
 En combate el juego oculta los enfriamientos a los addons (valor secreto, ver
 la documentación de C_Spell.GetSpellCooldown) y su reloj de enfriamiento no
@@ -30,7 +29,7 @@ acepta valores ocultos de un addon. Por eso la cuenta es propia: al lanzarlo
 cuenta atrás de "cooldown" segundos, o los del talento que tengas. Si el
 juego sí da el enfriamiento (fuera de combate), manda el suyo.
 
-Por defecto solo en combate; se puede hacer que se vea siempre. Cada aviso
+Por defecto solo en combate; se puede hacer que se vea también fuera. Cada aviso
 creado tiene IsEnabled/SetEnabled/Toggle, IsCombatOnly/SetCombatOnly, Check
 y Remaining (segundos que le quedan, 0 si está listo).
 ]]
@@ -79,11 +78,9 @@ local function notice(w)
     if not applies(w) then return nil end
     local spell = Api.KnownSpell(w.def.spells)
     if not spell then return nil end
-    local icon, left = Api.SpellIcon(spell), math.ceil(w.Remaining())
-    if left > 0 then
-        return icon, ("%s: %d s"):format(w.def.label, left), "warning", { badge = tostring(left), dim = true }
-    end
-    return icon, w.def.label .. " listo", "ready"
+    local left = math.ceil(w.Remaining())
+    if left <= 0 then return nil end
+    return Api.SpellIcon(spell), ("%s: %d s"):format(w.def.label, left), "warning", { badge = tostring(left), dim = true }
 end
 
 --------------------------------------------------------------------------------
@@ -91,7 +88,7 @@ end
 --------------------------------------------------------------------------------
 
 -- Repinta cada TICK mientras quede algo; al acabar, un último repintado lo
--- deja en "listo". Solo hay una cuenta en marcha a la vez.
+-- quita. Solo hay una cuenta en marcha a la vez.
 local function tick(w)
     w.Check()
     if w.Remaining() > 0 then
@@ -145,7 +142,7 @@ function CooldownWarning.Create(def)
     w.IsCombatOnly, w.SetCombatOnly = combat.IsCombatOnly, combat.SetCombatOnly
     Util.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID) onCast(w, unit, spellID) end)
     Util.On("SPELL_UPDATE_COOLDOWN", function() onCooldownUpdate(w) end)
-    local checkSoon = Util.Debounce(Const.READY_CHECK_DELAY, w.Check)
+    local checkSoon = Util.Debounce(Const.READY.CHECK_DELAY, w.Check)
     for _, event in ipairs(CHECK_EVENTS) do Util.On(event, checkSoon) end
     return w
 end

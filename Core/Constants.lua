@@ -194,9 +194,18 @@ Const.WARRIOR = {
 -- Quién tanquea (Core/Role.lua): el rol del buscador de grupo, si lo hay.
 Const.TANK_ROLE = "TANK"
 
--- Avisos de "ya puedes usarlo" (Features/ReadyWarning.lua): las ráfagas de
--- SPELL_UPDATE_USABLE se agrupan.
-Const.READY_CHECK_DELAY = 0.1
+-- Avisos de "ya puedes usarlo" (Features/ReadyWarning.lua).
+Const.READY = {
+    CHECK_DELAY = 0.1,   -- las ráfagas de eventos de "se puede usar" se agrupan
+    -- En combate se pregunta además al juego cada tanto: el evento que avisa
+    -- (ACTION_USABLE_CHANGED en Forever) solo llega por lo que está en las
+    -- barras de acción.
+    POLL = 0.25,
+}
+
+-- Mensaje interno de Core/SpellGlow.lua: el juego ha iluminado o apagado un
+-- hechizo en las barras de acción.
+Const.MSG_SPELL_GLOW = "FRANTOOLS_SPELL_GLOW"
 
 -- Avisos de enfriamiento (Features/CooldownWarning.lua).
 Const.COOLDOWN = {
@@ -331,7 +340,9 @@ Const.NOTICE = {
         ready = { 0.3, 1, 0.3 },      -- algo que ya puedes usar (Revancha)
     },
     -- Modo solo icono (/fran iconos): un cuadrado con el icono, sin texto.
-    -- El tamaño del icono lo elige el jugador, en los dos modos.
+    -- Sin texto al lado el icono es lo único que se ve: de entrada, más grande
+    -- que con texto. El tamaño lo puede elegir el jugador, en los dos modos.
+    ICON_ONLY_SIZE = 40,
     ICON_SIZE_MIN = 16,
     ICON_SIZE_MAX = 64,
     BADGE_FONT = "NumberFontNormalLarge",   -- cifra encima del icono (segundos que quedan)

@@ -57,8 +57,14 @@ function NoticeBox.IsIconOnly()
     return prefs().iconOnly == true
 end
 
+-- El que ha elegido el jugador o, si no, el de entrada del modo: sin texto
+-- al lado, el icono es lo único que se ve y va más grande.
+local function defaultIconSize()
+    return NoticeBox.IsIconOnly() and N.ICON_ONLY_SIZE or N.ICON_SIZE
+end
+
 function NoticeBox.IconSize()
-    return prefs().iconSize or N.ICON_SIZE
+    return prefs().iconSize or defaultIconSize()
 end
 
 --------------------------------------------------------------------------------
@@ -247,6 +253,6 @@ end
 -- Se ajusta a lo que cabe (ICON_SIZE_MIN..MAX); el de siempre no se guarda.
 function NoticeBox.SetIconSize(size)
     size = math.max(N.ICON_SIZE_MIN, math.min(N.ICON_SIZE_MAX, math.floor(size)))
-    Util.SetOverride(prefs(), "iconSize", size, N.ICON_SIZE)
+    Util.SetOverride(prefs(), "iconSize", size, defaultIconSize())
     relayoutAll()
 end
